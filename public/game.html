@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Cooking Show</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .header { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+    .header h1 { color: #667eea; margin-bottom: 10px; }
+    .menu { background: white; padding: 30px; border-radius: 10px; max-width: 500px; margin: 50px auto; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+    .menu h2 { margin-bottom: 20px; color: #333; }
+    input { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #e0e0e0; border-radius: 5px; font-size: 14px; }
+    button { width: 100%; padding: 12px; margin: 10px 0; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 14px; }
+    button:hover { background: #5568d3; }
+    .game-board { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+    .section { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+    .section h3 { margin-bottom: 15px; color: #667eea; }
+    .tray { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .ingredient-btn { padding: 8px; background: #FF6B6B; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    .ingredient-btn:hover { background: #E55555; }
+    .inventory { display: flex; flex-wrap: wrap; gap: 8px; }
+    .inventory-item { background: #4CAF50; color: white; padding: 6px 10px; border-radius: 15px; font-size: 12px; }
+    .recipe-card { background: #f9f9f9; padding: 10px; border-radius: 5px; border: 1px solid #e0e0e0; margin-bottom: 10px; }
+    .recipe-btn { padding: 6px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; margin-top: 5px; }
+    .recipe-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .scores { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    .score-box { background: #f0f0f0; padding: 10px; border-radius: 5px; text-align: center; }
+    .score-box.you { background: #FFD700; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="menu" class="menu">
+      <h2>🍳 The Cooking Show</h2>
+      <input id="playerName" type="text" placeholder="Your Name">
+      <button onclick="startGame()">Start Game</button>
+    </div>
+
+    <div id="gameView" class="hidden">
+      <div class="header">
+        <h1>🍳 The Cooking Show - Round <span id="roundNum">1</span>/3</h1>
+        <div class="scores" id="scores"></div>
+      </div>
+
+      <div class="game-board">
+        <div class="section">
+          <h3>🍽️ Ingredient Tray</h3>
+          <div class="tray" id="tray"></div>
+        </div>
+
+        <div class="section">
+          <h3>📦 Your Inventory</h3>
+          <div class="inventory" id="inventory"></div>
+        </div>
+
+        <div class="section">
+          <h3>📖 Recipes</h3>
+          <div id="recipes"></div>
+        </div>
+
+        <div class="section">
+          <h3>🍳 Cooking</h3>
+          <div id="cooking"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const RECIPES = {
+      carbonara: { name: 'Pasta Carbonara', ingredients: ['Eggs', 'Pasta', 'Bacon', 'Cheese'], difficulty: 2 },
+      stirfry: { name: 'Stir Fry', ingredients: ['Vegetables', 'Protein', 'Soy Sauce', 'Oil'], difficulty: 1 },
+      risotto: { name: 'Risotto', ingredients: ['Rice', 'Broth', 'Butter', 'Cheese'], difficulty: 3 },
+      salmon: { name: 'Salmon with Lemon', ingredients: ['Fish', 'Lemon', 'Butter', 'Herbs'], difficulty: 2 },
+      mousse: { name: 'Chocolate Mousse', ingredients: ['Chocolate', 'Eggs', 'Cream', 'Sugar'], difficulty: 3 },
+      tacos: { name: 'Beef Tacos', ingredients: ['Beef', 'Tortillas', 'Toppings', 'Spices'], difficulty: 1 }
+    };
+
+    const ALL_INGREDIENTS = ['Eggs', 'Pasta', 'Bacon', 'Cheese', 'Vegetables', 'Protein', 'Soy Sauce', 'Oil', 'Rice', 'Broth', 'Butter', 'Fish', 'Lemon', 'Herbs', 'Chocolate', 'Cream', 'Sugar', 'Beef', 'Tortillas', 'Toppings', 'Spices'];
+
+    let gameState = {
+      playerName: '',
+      inventory: [],
+      cooking: null,
+      score: 0,
+      round: 1,
+      maxRounds: 3,
+      tray: []
+    };
+
+    function startGame() {
+      const name = document.getElementById('playerName').value.trim();
+      if (!name) {
+        alert('Please enter your name');
+        return;
+      }
+      gameState.playerName = name;
+      document.getElementById('menu').classList.add('hidden');
+      document.getElementById('gameView').classList.remove('hidden');
+      initializeRound();
+    }
+
+    function initializeRound() {
+      gameState.tray = generateTray();
+      gameState.inventory = [];
+      gameState.cooking = null;
+      updateUI();
+    }
+
+    function generateTray() {
+      const count = 8;
+      const tray = [];
+      for (let i = 0; i < count; i++) {
+        tray.push(ALL_INGREDIENTS[Math.floor(Math.random() * ALL_INGREDIENTS.length)]);
+      }
+      return tray;
+    }
+
+    function pickIngredient(index) {
+      if (index < gameState.tray.length) {
+        const ingredient = gameState.tray[index];
+        gameState.inventory.push(ingredient);
+        gameState.tray.splice(index, 1);
+        updateUI();
+      }
+    }
+
+    function startCooking(recipeKey) {
+      if (gameState.cooking) return;
+      const recipe = RECIPES[recipeKey];
+      const hasAll = recipe.ingredients.every(ing => gameState.inventory.includes(ing));
+      if (!hasAll) {
+        alert('Missing ingredients!');
+        return;
+      }
+      gameState.cooking = { recipeKey, recipe, progress: 0 };
+      updateUI();
+    }
+
+    function submitDish() {
+      if (!gameState.cooking) return;
+      const { recipe } = gameState.cooking;
+      const failed = Math.random() < 0.2; // 20% fail chance
+      if (failed) {
+        alert('Failed to cook ' + recipe.name);
+        gameState.cooking = null;
+        gameState.inventory = gameState.inventory.filter(ing => !recipe.ingredients.includes(ing));
+      } else {
+        const score = recipe.difficulty * 10 + 20;
+        gameState.score += score;
+        alert('Success! +' + score + ' points');
+        gameState.inventory = gameState.inventory.filter(ing => !recipe.ingredients.includes(ing));
+        gameState.cooking = null;
+      }
+      updateUI();
+    }
+
+    function updateUI() {
+      // Update tray
+      const trayHTML = gameState.tray.map((ing, idx) =>
+        `<button class="ingredient-btn" onclick="pickIngredient(${idx})">${ing}</button>`
+      ).join('');
+      document.getElementById('tray').innerHTML = trayHTML;
+
+      // Update inventory
+      const invHTML = gameState.inventory.length === 0 ? '<p>No ingredients</p>' :
+        gameState.inventory.map(ing => `<span class="inventory-item">${ing}</span>`).join('');
+      document.getElementById('inventory').innerHTML = invHTML;
+
+      // Update recipes
+      const recipesHTML = Object.entries(RECIPES).map(([key, recipe]) => {
+        const hasAll = recipe.ingredients.every(ing => gameState.inventory.includes(ing));
+        return `
+          <div class="recipe-card">
+            <strong>${recipe.name}</strong>
+            <p style="font-size: 12px; color: #666; margin: 5px 0;">
+              Difficulty: ${'⭐'.repeat(recipe.difficulty)}
+            </p>
+            <p style="font-size: 11px; color: #666;">
+              ${recipe.ingredients.join(', ')}
+            </p>
+            <button class="recipe-btn" ${hasAll && !gameState.cooking ? '' : 'disabled'}
+              onclick="startCooking('${key}')">Cook</button>
+          </div>
+        `;
+      }).join('');
+      document.getElementById('recipes').innerHTML = recipesHTML;
+
+      // Update cooking
+      const cookingHTML = gameState.cooking ? `
+        <div style="background: #FFF3CD; padding: 15px; border-radius: 5px; border: 2px solid #FFD700;">
+          <h4>${gameState.cooking.recipe.name}</h4>
+          <button onclick="submitDish()" style="background: #4CAF50; width: 100%; margin-top: 10px;">Submit Dish</button>
+        </div>
+      ` : '<p>Select a recipe to cook</p>';
+      document.getElementById('cooking').innerHTML = cookingHTML;
+
+      // Update round and score
+      document.getElementById('roundNum').textContent = gameState.round;
+      document.getElementById('scores').innerHTML = `<div class="score-box you"><strong>${gameState.playerName}</strong><br>${gameState.score} pts</div>`;
+    }
+
+    // Initialize
+    updateUI();
+  </script>
+</body>
+</html>

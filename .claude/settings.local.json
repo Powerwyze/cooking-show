@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(npm start *)",
+      "Bash(curl -s http://localhost:3000/)",
+      "mcp__Claude_in_Chrome__navigate",
+      "mcp__Claude_in_Chrome__browser_batch",
+      "mcp__Claude_in_Chrome__read_page",
+      "Bash(curl -v http://localhost:3000/)",
+      "Bash(pkill -f \"node server.js\")",
+      "PowerShell(Get-Process node -ErrorAction SilentlyContinue)",
+      "PowerShell(Stop-Process -Force)",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "mcp__Claude_in_Chrome__read_console_messages",
+      "mcp__Claude_in_Chrome__javascript_tool",
+      "Bash(curl -i http://localhost:3000/test.html)",
+      "Bash(curl -s http://localhost:3000/game.html)",
+      "Bash(git add *)",
+      "Bash(git commit -m 'Build complete cooking game with multiplayer, CPU players, and socket.io support *)"
+    ]
+  }
+}
