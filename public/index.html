@@ -3,30 +3,2037 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>The Cooking Show - Competitive Cooking Game</title>
+  <title>The Cooking Show</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Courier New', monospace; background: #0a0a1a; min-height: 100vh; padding: 16px; color: #fff; }
+
+    /* TITLE */
+    .title-screen { text-align: center; margin-bottom: 20px; }
+    .title-screen h1 {
+      font-size: 42px; font-weight: 900; letter-spacing: 4px;
+      background: linear-gradient(90deg,#f97316,#facc15,#4ade80,#38bdf8,#c084fc);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      animation: rainbow 4s linear infinite; background-size: 300%;
     }
-    body {
-      font-family: 'Arial', sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      color: #333;
+    @keyframes rainbow { 0%{background-position:0%} 100%{background-position:300%} }
+    .title-screen p { color: #94a3b8; font-size: 13px; letter-spacing: 3px; margin-top: 4px; }
+    .music-btn { position: fixed; bottom: 20px; right: 20px; z-index: 4000; width: 44px; height: 44px; border-radius: 50%; background: #1e293b; border: 1px solid #334155; color: #94a3b8; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,.4); transition: all .15s; }
+    .music-btn:hover { border-color: #4ade80; color: #4ade80; box-shadow: 0 0 16px rgba(74,222,128,.3); }
+    .music-btn.muted { color: #475569; border-color: #1f2937; }
+
+    /* STATS */
+    .top-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 18px; }
+    .stat-box { background: linear-gradient(135deg,#1e293b,#0f172a); border: 1px solid #334155; border-radius: 10px; padding: 14px; text-align: center; box-shadow: 0 4px 0 #020617; }
+    .stat-label { color: #64748b; font-size: 11px; letter-spacing: 2px; }
+    .stat-value { font-size: 30px; font-weight: 900; margin-top: 4px; }
+    #stageDisplay{color:#f97316} #scoreDisplay{color:#4ade80} #recipesUnlockedDisplay{color:#38bdf8}
+
+    /* LAYOUT */
+    .main-grid { display: grid; grid-template-columns: 1fr 280px; gap: 16px; }
+    .game-screen { background: #111827; border: 1px solid #1f2937; border-radius: 12px; padding: 18px; }
+    .section-title { color: #94a3b8; font-size: 11px; letter-spacing: 2px; margin-bottom: 12px; margin-top: 18px; text-transform: uppercase; }
+    .section-title:first-child { margin-top: 0; }
+
+    /* INGREDIENTS */
+    .ingredients-grid { display: grid; grid-template-columns: repeat(8,1fr); gap: 7px; margin-bottom: 4px; }
+    .ingredient-btn {
+      background: linear-gradient(160deg,#1e1b4b,#312e81); border: 1px solid #4338ca; border-radius: 8px;
+      color: white; font-weight: bold; cursor: pointer; font-size: 8px; font-family: 'Courier New', monospace;
+      transition: all 0.12s ease; box-shadow: 0 3px 0 #1e1b4b;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 6px 3px; min-height: 58px; gap: 3px;
     }
-    #root {
-      width: 100%;
-      min-height: 100vh;
+    .ingredient-btn:hover { transform: translateY(-3px); box-shadow: 0 6px 0 #1e1b4b, 0 0 12px rgba(99,102,241,.5); border-color: #818cf8; }
+    .ingredient-btn:active { transform: translateY(0); box-shadow: 0 1px 0 #1e1b4b; }
+    .ing-emoji { font-size: 22px; line-height: 1; }
+    .ing-name { font-size: 7.5px; color: #a5b4fc; line-height: 1.2; }
+    .fly-up { position: fixed; font-size: 28px; pointer-events: none; z-index: 9999; animation: flyUp .7s ease-out forwards; }
+    @keyframes flyUp { 0%{opacity:1;transform:translateY(0) scale(1)} 100%{opacity:0;transform:translateY(-80px) scale(1.5)} }
+
+    /* CRAFTING */
+    .crafting-area { background: #1a1a2e; border: 1px solid #2d2d5e; border-radius: 10px; padding: 12px; margin-top: 4px; }
+    .craft-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 7px; }
+    .craft-btn {
+      background: linear-gradient(160deg,#1e3a5f,#0c2340); border: 1px solid #0ea5e9; border-radius: 7px;
+      color: #7dd3fc; padding: 8px 4px; font-weight: bold; cursor: pointer; font-size: 10px;
+      font-family: 'Courier New',monospace; box-shadow: 0 3px 0 #0c1a2e; transition: all 0.12s; text-align: center;
     }
+    .craft-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 0 #0c1a2e; border-color: #38bdf8; color: #e0f2fe; }
+    .craft-btn.selected { background: linear-gradient(160deg,#0c4a6e,#075985); border-color: #38bdf8; color: #fff; }
+
+    /* INVENTORY */
+    .inventory-area { background: #052e16; border: 1px solid #166534; border-radius: 10px; padding: 12px; min-height: 56px; margin-top: 4px; }
+    .inventory { display: flex; flex-wrap: wrap; gap: 7px; }
+    .inventory-item { background: linear-gradient(135deg,#14532d,#052e16); color: #86efac; padding: 5px 9px; border: 1px solid #16a34a; border-radius: 20px; font-size: 11px; font-weight: bold; display: flex; align-items: center; gap: 4px; }
+    .inventory-item.crafted { background: linear-gradient(135deg,#1e3a8a,#1e1b4b); color: #93c5fd; border-color: #3b82f6; }
+    .inv-empty { color: #374151; font-size: 12px; }
+
+    /* RECIPES */
+    .recipes-section { display: grid; grid-template-columns: repeat(2,1fr); gap: 9px; margin-top: 4px; }
+    .recipe-card { background: linear-gradient(135deg,#1e293b,#0f172a); border: 1px solid #334155; border-radius: 10px; padding: 10px 12px; cursor: pointer; box-shadow: 0 3px 0 #020617; transition: all 0.15s; display: flex; align-items: center; gap: 10px; }
+    .recipe-card:hover { transform: translateY(-3px); box-shadow: 0 6px 0 #020617; border-color: #475569; }
+    .recipe-emoji-big { font-size: 34px; flex-shrink: 0; }
+    .recipe-info { flex: 1; }
+    .recipe-name { font-size: 12px; font-weight: bold; color: #f1f5f9; margin-bottom: 3px; }
+    .recipe-meta { font-size: 9px; color: #64748b; }
+    .recipe-ready-badge { font-size: 9px; color: #000; background: #4ade80; padding: 2px 6px; border-radius: 10px; font-weight: bold; display: inline-block; margin-top: 3px; }
+
+    /* SIDEBAR */
+    .sidebar { display: grid; gap: 12px; align-content: start; }
+    .panel { background: #111827; border: 1px solid #1f2937; border-radius: 10px; padding: 14px; }
+    .panel-title { color: #94a3b8; font-size: 11px; letter-spacing: 2px; margin-bottom: 10px; }
+    .judge-item { display: flex; align-items: center; gap: 8px; padding: 8px; margin: 5px 0; background: #0f172a; border-radius: 7px; border-left: 3px solid #4ade80; font-size: 11px; }
+    .judge-avatar { font-size: 22px; }
+    .judge-info { flex: 1; }
+    .judge-name-text { color: #f1f5f9; font-weight: bold; font-size: 11px; }
+    .judge-specialty { color: #64748b; font-size: 9px; }
+    .equip-item { display: flex; align-items: center; gap: 6px; padding: 6px 8px; margin: 4px 0; background: #0f172a; border-radius: 6px; font-size: 11px; color: #94a3b8; }
+    .new-game-btn { width: 100%; padding: 14px; background: linear-gradient(135deg,#15803d,#166534); border: 1px solid #16a34a; border-radius: 10px; color: #fff; font-weight: bold; cursor: pointer; font-size: 13px; font-family: 'Courier New',monospace; box-shadow: 0 4px 0 #052e16; transition: all 0.12s; letter-spacing: 1px; }
+    .new-game-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #052e16; }
+
+    /* OVERLAYS */
+    .overlay-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,.8); backdrop-filter: blur(4px); z-index: 500; display: none; }
+    .overlay-bg.show { display: block; }
+
+    /* RECIPE MODAL */
+    .recipe-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: #0f172a; border: 1px solid #334155; border-radius: 16px; padding: 28px; z-index: 600; display: none; max-width: 500px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,.7); }
+    .recipe-modal.show { display: block; animation: popIn .25s ease-out; }
+    @keyframes popIn { from{transform:translate(-50%,-48%) scale(.95);opacity:0} to{transform:translate(-50%,-50%) scale(1);opacity:1} }
+    .modal-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+    .modal-dish-emoji { font-size: 52px; }
+    .modal-title { font-size: 20px; font-weight: 900; color: #f1f5f9; }
+    .modal-subtitle { font-size: 11px; color: #64748b; margin-top: 3px; }
+    .modal-section { margin-bottom: 16px; }
+    .modal-label { color: #64748b; font-size: 10px; letter-spacing: 2px; margin-bottom: 8px; }
+    .modal-ingredients { display: flex; flex-wrap: wrap; gap: 7px; }
+    .modal-ingredient { background: #1f2937; border: 1px solid #374151; color: #9ca3af; padding: 5px 10px; border-radius: 20px; font-size: 11px; display: flex; align-items: center; gap: 5px; }
+    .modal-ingredient.have { background: #052e16; border-color: #16a34a; color: #4ade80; }
+    .modal-steps { display: flex; gap: 6px; flex-wrap: wrap; }
+    .modal-step { background: #1e1b4b; border: 1px solid #3730a3; color: #a5b4fc; padding: 5px 11px; border-radius: 20px; font-size: 11px; display: flex; align-items: center; gap: 4px; }
+    .modal-step-num { color: #6366f1; font-size: 9px; font-weight: 900; }
+    .modal-info-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 5px; }
+    .pill { background: #1e293b; border: 1px solid #334155; color: #94a3b8; padding: 4px 10px; border-radius: 20px; font-size: 10px; }
+    .modal-btns { display: flex; gap: 10px; margin-top: 22px; }
+    .modal-close-btn { flex: 1; padding: 11px; background: #1f2937; border: 1px solid #374151; border-radius: 8px; color: #9ca3af; font-weight: bold; cursor: pointer; font-size: 13px; font-family: 'Courier New',monospace; }
+    .modal-cook-btn { flex: 2; padding: 11px; background: linear-gradient(135deg,#15803d,#166534); border: 1px solid #16a34a; border-radius: 8px; color: #fff; font-weight: bold; cursor: pointer; font-size: 13px; font-family: 'Courier New',monospace; }
+    .modal-cook-btn:disabled { background: #1f2937; border-color: #374151; color: #4b5563; cursor: not-allowed; }
+
+    /* ═══════════════════════════════════════════
+       COOKING GAME — FULL SCREEN
+    ═══════════════════════════════════════════ */
+    .cooking-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(160deg,#05070f 0%,#0c1022 100%);
+      z-index: 700; display: none; flex-direction: column;
+      align-items: center; justify-content: center; text-align: center;
+      overflow: hidden;
+    }
+    .cooking-overlay.show { display: flex; }
+
+    .cook-top { display: flex; justify-content: space-between; align-items: flex-start; width: 520px; max-width: 94vw; margin-bottom: 6px; }
+    .cook-recipe-label { font-size: 11px; letter-spacing: 3px; color: #475569; }
+    .cook-recipe-name-big { font-size: 22px; font-weight: 900; color: #f1f5f9; margin-top: 2px; }
+
+    /* Step progress dots */
+    .steps-track { display: flex; gap: 8px; justify-content: center; margin: 10px 0 6px; }
+    .step-pip {
+      width: 38px; height: 38px; border-radius: 50%;
+      border: 2px solid #1f2937; background: #0f172a;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; color: #334155; transition: all 0.2s;
+    }
+    .step-pip.done { background: #052e16; border-color: #16a34a; color: #4ade80; font-size: 16px; }
+    .step-pip.current { background: #1c1917; border-color: #facc15; color: #facc15; animation: pipPulse .8s ease-in-out infinite alternate; }
+    @keyframes pipPulse { from{box-shadow:0 0 6px rgba(250,204,21,.3)} to{box-shadow:0 0 18px rgba(250,204,21,.8)} }
+
+    /* Animated cook scene */
+    .cook-scene {
+      position: relative; height: 120px; width: 260px;
+      display: flex; align-items: center; justify-content: center; margin: 4px auto;
+    }
+    .cook-pan-emoji { font-size: 72px; animation: panSizzle .6s ease-in-out infinite alternate; z-index: 2; }
+    @keyframes panSizzle { from{transform:rotate(-4deg) scale(1)} to{transform:rotate(4deg) scale(1.04)} }
+    .steam-wrap { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 100px; pointer-events: none; }
+    .wisp { position: absolute; bottom: 0; width: 10px; height: 55px; background: radial-gradient(ellipse,rgba(255,255,255,.2),transparent 70%); border-radius: 50%; animation: wisp 2s ease-out infinite; }
+    .wisp:nth-child(1){left:20px;animation-delay:0s}
+    .wisp:nth-child(2){left:42px;animation-delay:.4s}
+    .wisp:nth-child(3){left:64px;animation-delay:.8s}
+    @keyframes wisp { 0%{transform:translateY(0) scaleX(1);opacity:.7} 60%{opacity:.3} 100%{transform:translateY(-70px) scaleX(2.5);opacity:0} }
+    .flames-row { position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); font-size: 32px; letter-spacing: -4px; animation: flames .35s ease-in-out infinite alternate; }
+    @keyframes flames { from{transform:translateX(-50%) scaleY(1)} to{transform:translateX(-50%) scaleY(1.2)} }
+
+    /* Current action label */
+    .challenge-action-label { font-size: 26px; font-weight: 900; letter-spacing: 4px; color: #facc15; margin: 8px 0 4px; }
+
+    /* Challenge box */
+    .challenge-box {
+      background: #0f172a; border: 2px solid #1e293b; border-radius: 18px;
+      padding: 22px 26px; width: 520px; max-width: 94vw;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .challenge-instruction { color: #64748b; font-size: 12px; margin-bottom: 16px; letter-spacing: 1px; }
+    .mini-game { }
+    .mini-game.hidden { display: none; }
+
+    /* ── TIMING GAME ── */
+    .slider-track {
+      position: relative; height: 44px; background: #1e293b;
+      border: 2px solid #334155; border-radius: 22px; overflow: hidden; margin-bottom: 16px;
+    }
+    .slider-green-zone {
+      position: absolute; top: 0; height: 100%;
+      background: rgba(74,222,128,.2); border-left: 2px solid #4ade80; border-right: 2px solid #4ade80;
+    }
+    .slider-ball {
+      position: absolute; top: 50%; transform: translate(-50%,-50%);
+      width: 26px; height: 26px; border-radius: 50%;
+      background: #f87171; box-shadow: 0 0 12px #f87171;
+      transition: left .04s linear, background .1s, box-shadow .1s;
+    }
+    .slider-ball.in-zone { background: #4ade80; box-shadow: 0 0 16px #4ade80; }
+    .timing-tap-btn {
+      width: 100%; padding: 16px; font-size: 18px; font-weight: 900; letter-spacing: 2px;
+      background: linear-gradient(135deg,#1e3a5f,#0c2340); border: 2px solid #0ea5e9;
+      border-radius: 12px; color: #fff; cursor: pointer; font-family: 'Courier New',monospace;
+      box-shadow: 0 5px 0 #0c1a2e; transition: all .1s;
+    }
+    .timing-tap-btn:hover { transform: translateY(-2px); box-shadow: 0 7px 0 #0c1a2e; }
+    .timing-tap-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #0c1a2e; }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+
+    /* ── MASH GAME ── */
+    .mash-area { display: flex; justify-content: center; margin: 4px 0 14px; }
+    .mash-target {
+      width: 120px; height: 120px; border-radius: 50%;
+      background: linear-gradient(135deg,#1e3a5f,#0c2340); border: 3px solid #0ea5e9;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 58px; cursor: pointer;
+      box-shadow: 0 6px 0 #0c1a2e, 0 0 24px rgba(14,165,233,.3);
+      transition: transform .08s, box-shadow .08s; user-select: none;
+    }
+    .mash-target:active { transform: scale(.87); box-shadow: 0 2px 0 #0c1a2e; }
+    .mash-progress-row { display: flex; align-items: center; gap: 10px; }
+    .mash-bar { flex: 1; height: 14px; background: #1e293b; border-radius: 7px; overflow: hidden; border: 1px solid #334155; }
+    .mash-fill { height: 100%; background: linear-gradient(90deg,#38bdf8,#4ade80); border-radius: 7px; transition: width .1s; }
+    .mash-count { color: #94a3b8; font-size: 13px; font-weight: bold; white-space: nowrap; min-width: 46px; }
+
+    /* ── HOLD GAME ── */
+    .hold-game-inner { display: flex; align-items: center; gap: 24px; justify-content: center; margin-bottom: 16px; }
+    .gauge-track {
+      position: relative; width: 56px; height: 160px;
+      background: #1e293b; border: 2px solid #334155; border-radius: 28px; overflow: hidden;
+    }
+    .gauge-green-zone {
+      position: absolute; left: 0; right: 0;
+      background: rgba(74,222,128,.2); border-top: 2px solid #4ade80; border-bottom: 2px solid #4ade80;
+    }
+    .gauge-fill {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: #38bdf8; transition: height .05s linear, background .1s;
+      border-radius: 26px;
+    }
+    .gauge-fill.too-hot { background: #f87171; }
+    .gauge-fill.perfect { background: #4ade80; }
+    .hold-info { display: flex; flex-direction: column; gap: 8px; text-align: left; }
+    .hold-zone-label { font-size: 11px; color: #64748b; }
+    .hold-timer-display { font-size: 28px; font-weight: 900; color: #4ade80; }
+    .hold-timer-label { font-size: 10px; color: #64748b; }
+    .hold-btn {
+      width: 100%; padding: 16px; font-size: 16px; font-weight: 900; letter-spacing: 2px;
+      background: linear-gradient(135deg,#7f1d1d,#450a0a); border: 2px solid #ef4444;
+      border-radius: 12px; color: #fff; cursor: pointer; font-family: 'Courier New',monospace;
+      box-shadow: 0 5px 0 #220000; transition: all .1s; user-select: none;
+    }
+    .hold-btn.active { background: linear-gradient(135deg,#dc2626,#991b1b); box-shadow: 0 5px 0 #220000, 0 0 30px rgba(239,68,68,.5); transform: scale(1.02); }
+
+    /* Step timer bar */
+    .step-timer-row { display: flex; align-items: center; gap: 10px; width: 520px; max-width: 94vw; margin-top: 10px; }
+    .step-timer-bar { flex: 1; height: 8px; background: #1e293b; border-radius: 4px; overflow: hidden; border: 1px solid #1f2937; }
+    .step-timer-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg,#4ade80,#facc15,#f97316); transition: width .05s linear; }
+    .step-timer-label { color: #475569; font-size: 11px; min-width: 32px; text-align: right; }
+
+    /* Sparks */
+    .spark { position: fixed; pointer-events: none; z-index: 9999; font-size: 20px; animation: spark .6s ease-out forwards; }
+    @keyframes spark { 0%{transform:translate(0,0) scale(1);opacity:1} 100%{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0} }
+
+    /* DISH REVEAL */
+    .dish-reveal { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 1500; display: none; text-align: center; pointer-events: none; }
+    .dish-reveal.show { display: block; animation: dishReveal 1.8s ease-out forwards; }
+    @keyframes dishReveal {
+      0%{opacity:0;transform:translate(-50%,-50%) scale(.2) rotate(-20deg)}
+      25%{opacity:1;transform:translate(-50%,-50%) scale(1.25) rotate(5deg)}
+      50%{transform:translate(-50%,-50%) scale(.95) rotate(-3deg)}
+      70%{transform:translate(-50%,-50%) scale(1.08) rotate(2deg)}
+      85%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(0deg)}
+      100%{opacity:0;transform:translate(-50%,-50%) scale(1.1)}
+    }
+    .dish-reveal-emoji { font-size: 110px; filter: drop-shadow(0 0 40px rgba(255,200,0,.9)); }
+    .dish-reveal-text { font-size: 22px; font-weight: 900; color: #facc15; letter-spacing: 3px; margin-top: 10px; text-shadow: 0 0 30px rgba(250,204,21,.8); }
+    .confetti-wrap { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1400; overflow: hidden; }
+    .confetti { position: absolute; width: 10px; height: 10px; border-radius: 2px; animation: confettiFall linear forwards; }
+    @keyframes confettiFall { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(110vh) rotate(720deg);opacity:0} }
+
+    /* JUDGE SCREEN */
+    .judge-screen { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: #0f172a; border: 1px solid #334155; border-radius: 18px; padding: 30px; text-align: center; z-index: 800; box-shadow: 0 30px 80px rgba(0,0,0,.8); display: none; max-width: 520px; width: 92%; }
+    .judge-screen.show { display: block; animation: popIn .3s ease-out; }
+    .judge-screen-title { font-size: 13px; letter-spacing: 3px; color: #64748b; margin-bottom: 18px; }
+    .judge-row-rating { display: flex; align-items: center; gap: 14px; background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 12px 16px; margin: 8px 0; }
+    .jr-avatar { font-size: 32px; }
+    .jr-info { flex: 1; text-align: left; }
+    .jr-name { font-size: 14px; font-weight: 900; color: #f1f5f9; }
+    .jr-stars { font-size: 20px; margin-top: 3px; }
+    .dish-scored-emoji { font-size: 64px; margin-bottom: 10px; }
+    .total-score-display { font-size: 38px; font-weight: 900; color: #4ade80; margin: 18px 0 6px; text-shadow: 0 0 20px rgba(74,222,128,.6); }
+    .continue-btn { padding: 13px 40px; margin-top: 16px; background: linear-gradient(135deg,#15803d,#166534); border: 1px solid #16a34a; border-radius: 10px; color: #fff; font-weight: bold; cursor: pointer; font-size: 14px; font-family: 'Courier New',monospace; box-shadow: 0 4px 0 #052e16; transition: all .12s; }
+    .continue-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #052e16; }
+
+    /* TOAST */
+    .toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(120px); background: linear-gradient(135deg,#1e1b4b,#312e81); border: 2px solid #facc15; border-radius: 14px; padding: 16px 24px; z-index: 3000; display: flex; align-items: center; gap: 14px; box-shadow: 0 8px 40px rgba(0,0,0,.6),0 0 20px rgba(250,204,21,.3); transition: transform .4s cubic-bezier(.34,1.56,.64,1); pointer-events: none; min-width: 280px; }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast-emoji { font-size: 40px; }
+    .toast-title { font-size: 11px; letter-spacing: 2px; color: #facc15; font-weight: bold; margin-bottom: 3px; }
+    .toast-body { font-size: 15px; color: #fff; font-weight: 900; }
+
+    /* ── START SCREEN ── */
+    .start-screen { position:fixed;top:0;left:0;width:100%;height:100%;z-index:6000;background:#060912;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden; }
+    .start-screen.hiding { animation:screenFade .55s forwards; pointer-events:none; }
+    @keyframes screenFade { to{opacity:0;transform:scale(1.06)} }
+    .start-particle { position:absolute;pointer-events:none;animation:particleDrift linear infinite;opacity:.15; }
+    @keyframes particleDrift { 0%{transform:translateY(105vh) rotate(0deg)} 100%{transform:translateY(-10vh) rotate(360deg)} }
+    .start-content { position:relative;z-index:2; }
+    .start-logo { font-size:96px;display:block;animation:float 3.2s ease-in-out infinite;filter:drop-shadow(0 0 30px rgba(251,191,36,.5)); }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-20px)} }
+    .start-game-title { font-size:52px;font-weight:900;letter-spacing:5px;background:linear-gradient(90deg,#f97316,#facc15,#4ade80,#38bdf8,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:rainbow 4s linear infinite;background-size:300%;margin:18px 0 8px; }
+    .start-sub { color:#475569;font-size:12px;letter-spacing:4px;margin-bottom:44px; }
+    .start-btns { display:flex;flex-direction:column;gap:12px;align-items:center; }
+    .start-btn { width:250px;padding:15px 24px;border-radius:12px;font-size:14px;font-weight:900;font-family:'Courier New',monospace;cursor:pointer;letter-spacing:2px;transition:all .15s;border:2px solid; }
+    .start-btn.primary { background:linear-gradient(135deg,#15803d,#166534);border-color:#16a34a;color:#fff;box-shadow:0 7px 0 #052e16; }
+    .start-btn.primary:hover { transform:translateY(-3px);box-shadow:0 10px 0 #052e16,0 0 30px rgba(74,222,128,.3); }
+    .start-btn.primary:active { transform:translateY(2px);box-shadow:0 3px 0 #052e16; }
+    .start-btn.secondary { background:#111827;border-color:#1f2937;color:#64748b;box-shadow:0 4px 0 #020617; }
+    .start-btn.secondary:hover { border-color:#334155;color:#94a3b8;transform:translateY(-2px);box-shadow:0 6px 0 #020617; }
+
+    /* ── IN-GAME GEAR BUTTON ── */
+    .ingame-gear { position:fixed;top:14px;right:14px;z-index:2500;width:44px;height:44px;border-radius:10px;background:#111827;border:1px solid #1f2937;color:#475569;font-size:18px;cursor:pointer;display:none;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.5);transition:all .15s; }
+    .ingame-gear.visible { display:flex; }
+    .ingame-gear:hover { border-color:#334155;color:#94a3b8; }
+
+    /* ── GAME MENU PANEL ── */
+    .game-menu-panel { position:fixed;top:66px;right:14px;z-index:2500;background:#0f172a;border:1px solid #1f2937;border-radius:14px;padding:8px;min-width:210px;box-shadow:0 16px 48px rgba(0,0,0,.8);display:none; }
+    .game-menu-panel.show { display:block;animation:popIn .18s ease-out; }
+    .gm-item { display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:9px;cursor:pointer;font-size:12px;font-weight:bold;color:#94a3b8;font-family:'Courier New',monospace;transition:all .1s;letter-spacing:1px; }
+    .gm-item:hover { background:#1e293b;color:#f1f5f9; }
+    .gm-divider { height:1px;background:#1e293b;margin:4px 0; }
+    .gm-item.danger:hover { background:#1f0808;color:#f87171; }
+
+    /* ── SHARED MODAL SHELL ── */
+    .modal-shell { position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.75);backdrop-filter:blur(5px);z-index:6500;display:none;align-items:center;justify-content:center; }
+    .modal-shell.show { display:flex; }
+    .modal-box { background:#0f172a;border:1px solid #1e293b;border-radius:18px;padding:28px 30px;max-width:560px;width:94%;max-height:88vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,.9);animation:popIn .22s ease-out; }
+    .modal-box::-webkit-scrollbar { width:5px; }
+    .modal-box::-webkit-scrollbar-track { background:#0f172a; }
+    .modal-box::-webkit-scrollbar-thumb { background:#1e293b;border-radius:3px; }
+    .mbox-header { display:flex;align-items:center;gap:10px;margin-bottom:22px; }
+    .mbox-title { font-size:18px;font-weight:900;color:#f1f5f9;flex:1; }
+    .mbox-close { background:none;border:none;color:#475569;font-size:20px;cursor:pointer;padding:2px 6px;border-radius:6px;line-height:1; }
+    .mbox-close:hover { color:#f87171; }
+
+    /* ── SETTINGS ── */
+    .setting-row { display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid #1e293b; }
+    .setting-row:last-child { border-bottom:none; }
+    .setting-lbl { color:#f1f5f9;font-size:13px;font-weight:bold; }
+    .setting-sub { color:#475569;font-size:10px;margin-top:2px; }
+    .toggle-pill { width:52px;height:28px;border-radius:14px;border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0; }
+    .toggle-pill.off { background:#1f2937; }
+    .toggle-pill.on  { background:#16a34a; }
+    .toggle-pill::after { content:'';position:absolute;width:22px;height:22px;border-radius:50%;background:#fff;top:3px;transition:left .2s; }
+    .toggle-pill.off::after { left:3px; }
+    .toggle-pill.on::after  { left:27px; }
+    .seg-group { display:flex;gap:5px; }
+    .seg-opt { padding:6px 14px;border-radius:8px;border:1px solid #1e293b;background:#0f172a;color:#475569;font-size:11px;font-weight:bold;font-family:'Courier New',monospace;cursor:pointer;transition:all .12s; }
+    .seg-opt.active { background:#1e1b4b;border-color:#4338ca;color:#a5b4fc; }
+    input[type=range].styled { accent-color:#4ade80;width:110px;cursor:pointer; }
+
+    /* ── HOW TO PLAY ── */
+    .htp-section { margin-bottom:20px; }
+    .htp-section-label { font-size:10px;letter-spacing:3px;color:#475569;margin-bottom:10px; }
+    .htp-card { background:#111827;border:1px solid #1e293b;border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:12px; }
+    .htp-icon { font-size:30px;flex-shrink:0;width:36px;text-align:center; }
+    .htp-card strong { color:#f1f5f9;font-size:13px;display:block;margin-bottom:4px; }
+    .htp-card p { color:#64748b;font-size:11px;line-height:1.7; }
+    .mg-badge { display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:900;font-family:'Courier New',monospace;margin-right:6px; }
+    .mg-mash   { background:#1e1b4b;color:#a5b4fc;border:1px solid #4338ca; }
+    .mg-timing { background:#1c0f03;color:#fb923c;border:1px solid #c2410c; }
+    .mg-hold   { background:#14072b;color:#c084fc;border:1px solid #7e22ce; }
+
+    /* ── RECIPE BOOK OVERLAY ── */
+    .rb-overlay { position:fixed;top:0;left:0;width:100%;height:100%;z-index:5400;background:linear-gradient(160deg,#0c0801 0%,#1a1103 50%,#0c0801 100%);display:none;flex-direction:column;align-items:center;padding:22px 16px 16px;overflow-y:auto; }
+    .rb-overlay.show { display:flex;animation:rbSlide .4s ease-out; }
+    @keyframes rbSlide { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+    .rb-header { text-align:center;margin-bottom:20px; }
+    .rb-icon { font-size:64px;display:block;animation:float 3s ease-in-out infinite; }
+    .rb-title { font-size:28px;font-weight:900;letter-spacing:4px;background:linear-gradient(90deg,#f97316,#facc15);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin:10px 0 5px; }
+    .rb-sub { color:#44290a;font-size:10px;letter-spacing:3px; }
+    .rb-new-banner { background:linear-gradient(90deg,#78350f,#b45309,#78350f);border:1px solid #d97706;border-radius:8px;padding:8px 18px;margin-bottom:18px;font-size:11px;font-weight:900;color:#fef3c7;letter-spacing:2px;text-align:center; }
+    .rb-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;width:100%;max-width:860px;margin-bottom:20px; }
+    .rb-card { background:#110c02;border:1px solid #2d1f06;border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px;position:relative;transition:border-color .15s; }
+    .rb-card:hover { border-color:#78350f; }
+    .rb-card.new-recipe { border-color:#f59e0b;box-shadow:0 0 22px rgba(245,158,11,.3),0 0 6px rgba(245,158,11,.15); animation:newGlow 1.5s ease-in-out infinite alternate; }
+    @keyframes newGlow { from{box-shadow:0 0 16px rgba(245,158,11,.2)} to{box-shadow:0 0 30px rgba(245,158,11,.5)} }
+    .rb-new-badge { position:absolute;top:7px;right:7px;background:#f59e0b;color:#000;font-size:8px;font-weight:900;border-radius:4px;padding:2px 6px;letter-spacing:1px; }
+    .rb-card-emoji { font-size:34px;line-height:1; }
+    .rb-card-name { font-size:11px;font-weight:900;color:#fef3c7;letter-spacing:1px;line-height:1.3; }
+    .rb-card-diff { font-size:11px;color:#78350f; }
+    .rb-card-ingr { font-size:9px;color:#44290a;line-height:1.6; }
+    .rb-card-equip { font-size:9px;background:#1f1506;border:1px solid #3d2609;border-radius:5px;padding:2px 7px;color:#b45309;display:inline-block;margin-top:2px; }
+    .rb-footer { display:flex;align-items:center;gap:16px; }
+    .rb-open-btn { padding:14px 44px;background:linear-gradient(135deg,#0a2e1a,#0d3d22);border:2px solid #16a34a;border-radius:12px;color:#4ade80;font-size:14px;font-weight:900;font-family:'Courier New',monospace;cursor:pointer;letter-spacing:2px;box-shadow:0 6px 0 #052e16;transition:all .15s; }
+    .rb-open-btn:hover { transform:translateY(-3px);box-shadow:0 9px 0 #052e16,0 0 24px rgba(74,222,128,.3); }
+    .rb-open-btn:active { transform:translateY(2px);box-shadow:0 3px 0 #052e16; }
+    .rb-card { cursor:pointer; }
+    .rb-card:hover { border-color:#92400e;background:#180f02; }
+    /* equipment strip */
+    .rb-kitchen { display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:16px;background:#110c02;border:1px solid #2d1f06;border-radius:10px;padding:11px 16px;width:100%;max-width:860px; }
+    .rb-kitchen-label { font-size:9px;letter-spacing:3px;color:#44290a;margin-right:4px;white-space:nowrap; }
+    .rb-equip-chip { display:flex;align-items:center;gap:6px;background:#1f1506;border:1px solid #3d2609;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:900;color:#f59e0b;font-family:'Courier New',monospace;letter-spacing:1px; }
+    /* equipment badge on recipe card */
+    .rb-card-equip.has-it  { color:#4ade80;border-color:#14532d;background:#052e16; }
+    .rb-card-equip.no-equip { color:#f87171;border-color:#450a0a;background:#1a0505; }
+    /* ── Recipe detail popup (inside recipe book) ── */
+    .rb-detail-bg { position:fixed;top:0;left:0;width:100%;height:100%;z-index:5450;background:rgba(0,0,0,.6);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center; }
+    .rb-detail-bg.show { display:flex;animation:fadeIn .2s ease-out; }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+    .rb-detail { background:#120d02;border:1px solid #78350f;border-radius:16px;padding:26px 28px;max-width:420px;width:92%;box-shadow:0 20px 60px rgba(0,0,0,.9);animation:popIn .22s ease-out; }
+    .rb-detail-top { display:flex;align-items:center;gap:14px;margin-bottom:18px; }
+    .rb-detail-emoji { font-size:52px;line-height:1; }
+    .rb-detail-name { font-size:17px;font-weight:900;color:#fef3c7;letter-spacing:1px; }
+    .rb-detail-diff { font-size:13px;color:#92400e;margin-top:3px; }
+    .rb-detail-equip { display:inline-block;background:#1f1506;border:1px solid #3d2609;border-radius:6px;padding:3px 10px;font-size:10px;color:#d97706;margin-top:5px;font-family:'Courier New',monospace; }
+    .rb-detail-section { font-size:9px;letter-spacing:3px;color:#44290a;margin:14px 0 8px; }
+    .rb-detail-ingrs { display:flex;flex-wrap:wrap;gap:7px; }
+    .rb-detail-ing { background:#1f1506;border:1px solid #3d2609;border-radius:8px;padding:7px 11px;display:flex;align-items:center;gap:6px;font-size:11px;color:#fef3c7;font-weight:bold; }
+    .rb-detail-ing-emoji { font-size:20px; }
+    .rb-detail-steps { display:flex;flex-direction:column;gap:5px; }
+    .rb-detail-step { display:flex;align-items:center;gap:8px;background:#1f1506;border-radius:7px;padding:7px 10px;font-size:11px;color:#d97706; }
+    .rb-detail-stepnum { width:18px;height:18px;border-radius:50%;background:#3d2609;color:#f59e0b;font-size:9px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+    .rb-detail-close { width:100%;margin-top:18px;padding:11px;background:#1f1506;border:1px solid #3d2609;border-radius:9px;color:#92400e;font-size:11px;font-weight:900;font-family:'Courier New',monospace;cursor:pointer;letter-spacing:2px;transition:all .12s; }
+    .rb-detail-close:hover { border-color:#78350f;color:#d97706; }
+
+    /* ── FRIDGE OVERLAY ── */
+    .fridge-overlay { position:fixed;top:0;left:0;width:100%;height:100%;z-index:5500;background:linear-gradient(180deg,#040c18 0%,#071a2e 55%,#040c18 100%);display:none;flex-direction:column;align-items:center;padding:22px 16px 16px;overflow-y:auto; }
+    .fridge-overlay.show { display:flex;animation:fridgePop .4s ease-out; }
+    @keyframes fridgePop { from{opacity:0;transform:scale(1.05)} to{opacity:1;transform:scale(1)} }
+    .fridge-flake { position:fixed;pointer-events:none;animation:flakeDrift linear infinite;opacity:.07;font-style:normal; }
+    @keyframes flakeDrift { 0%{transform:translateY(-8vh) rotate(0deg)} 100%{transform:translateY(108vh) rotate(360deg)} }
+    .fridge-header { text-align:center;margin-bottom:16px; }
+    .fridge-icon { font-size:72px;display:block;animation:float 3s ease-in-out infinite;filter:drop-shadow(0 0 24px rgba(56,189,248,.4)); }
+    .fridge-title { font-size:32px;font-weight:900;color:#38bdf8;letter-spacing:4px;margin:10px 0 5px; }
+    .fridge-sub { color:#164e63;font-size:10px;letter-spacing:3px; }
+    .fridge-countdown-row { display:flex;align-items:center;gap:14px;width:100%;max-width:660px;margin-bottom:14px; }
+    .fridge-timer-num { font-size:56px;font-weight:900;color:#38bdf8;width:68px;text-align:center;font-family:'Courier New',monospace;transition:color .25s;line-height:1; }
+    .fridge-bar-track { flex:1;height:12px;background:#071a2e;border-radius:6px;overflow:hidden;border:1px solid #0c2e47; }
+    .fridge-bar { height:100%;background:#38bdf8;border-radius:6px;transition:width 1s linear,background .4s; box-shadow:0 0 10px rgba(56,189,248,.5); }
+    .fridge-tray-info { font-size:10px;color:#164e63;letter-spacing:2px;margin-bottom:12px; }
+    .fridge-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;width:100%;max-width:840px;margin-bottom:16px; }
+    .fridge-ing-btn { background:#071a2e;border:1px solid #0c2e47;border-radius:10px;padding:11px 6px 9px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;transition:border-color .1s,background .1s;position:relative;user-select:none;-webkit-user-select:none; }
+    .fridge-ing-btn:hover { border-color:#0e7490;background:#0c2a44; }
+    .fridge-ing-btn:active { transform:scale(.88); }
+    .fridge-ing-btn.grabbed { animation:grabFlash .2s ease-out; }
+    @keyframes grabFlash { 0%{background:#0c3d6b;border-color:#38bdf8;transform:scale(.9)} 60%{transform:scale(1.04)} 100%{background:#071a2e;border-color:#0c2e47;transform:scale(1)} }
+    .fridge-ing-emoji { font-size:30px;pointer-events:none; }
+    .fridge-ing-name { font-size:9px;color:#334e68;font-weight:bold;text-align:center;font-family:'Courier New',monospace;line-height:1.3;pointer-events:none; }
+    .fridge-ing-count { position:absolute;top:4px;right:4px;background:#166534;color:#bbf7d0;font-size:9px;font-weight:900;border-radius:9px;padding:1px 5px;font-family:'Courier New',monospace;pointer-events:none; }
+    .fridge-footer { display:flex;flex-direction:column;align-items:center;gap:10px; }
+    .fridge-grab-total { color:#164e63;font-size:11px;letter-spacing:2px;font-family:'Courier New',monospace; }
+    .fridge-done-btn { padding:13px 40px;background:#071a2e;border:1px solid #0c2e47;border-radius:10px;color:#334e68;font-size:12px;font-weight:900;font-family:'Courier New',monospace;cursor:pointer;letter-spacing:2px;transition:all .15s; }
+    .fridge-done-btn:hover { border-color:#0e7490;color:#7dd3fc; }
+
+    /* ── AUTH SCREEN ── */
+    .auth-screen { position:fixed;top:0;left:0;width:100%;height:100%;z-index:7000;background:#060912;display:flex;align-items:center;justify-content:center;overflow:hidden; }
+    .auth-screen.hiding { animation:screenFade .45s forwards;pointer-events:none; }
+    .auth-box { background:linear-gradient(135deg,#0f172a,#111827);border:1px solid #1e293b;border-radius:18px;padding:40px 36px;width:340px;max-width:90vw;box-shadow:0 24px 64px rgba(0,0,0,.7); }
+    .auth-logo { font-size:56px;display:block;text-align:center;margin-bottom:6px; }
+    .auth-game-title { font-size:21px;font-weight:900;letter-spacing:4px;background:linear-gradient(90deg,#f97316,#facc15);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center;margin-bottom:3px; }
+    .auth-sub { color:#475569;font-size:10px;letter-spacing:2px;text-align:center;margin-bottom:26px; }
+    .auth-tabs { display:flex;background:#0f172a;border:1px solid #1e293b;border-radius:8px;padding:3px;margin-bottom:22px;gap:3px; }
+    .auth-tab { flex:1;padding:8px;border:none;background:transparent;color:#475569;font-family:'Courier New',monospace;font-size:11px;font-weight:700;letter-spacing:1.5px;cursor:pointer;border-radius:6px;transition:all .15s; }
+    .auth-tab.active { background:#1e293b;color:#e2e8f0; }
+    .auth-field { width:100%;background:#0f172a;border:1px solid #1e293b;border-radius:8px;padding:11px 14px;color:#f1f5f9;font-family:'Courier New',monospace;font-size:13px;margin-bottom:11px;outline:none;transition:border-color .15s;display:block; }
+    .auth-field::placeholder { color:#334155; }
+    .auth-field:focus { border-color:#38bdf8;box-shadow:0 0 0 3px rgba(56,189,248,.1); }
+    .auth-submit { width:100%;padding:13px;border:none;border-radius:8px;font-family:'Courier New',monospace;font-size:12px;font-weight:900;letter-spacing:2px;cursor:pointer;transition:all .15s;margin-top:4px;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;box-shadow:0 4px 0 #7c2d12; }
+    .auth-submit:hover { transform:translateY(-2px);box-shadow:0 6px 0 #7c2d12; }
+    .auth-submit:active { transform:translateY(1px);box-shadow:0 2px 0 #7c2d12; }
+    .auth-submit:disabled { opacity:.5;cursor:not-allowed;transform:none !important;box-shadow:0 4px 0 #7c2d12; }
+    .auth-error { color:#f87171;font-size:10px;margin-top:10px;min-height:14px;letter-spacing:1px;text-align:center; }
   </style>
 </head>
 <body>
-  <div id="root"></div>
-  <script src="https://cdn.socket.io/4.5.4/socket.io.js"></script>
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script defer src="/app.js"></script>
+
+  <!-- ═══ RECIPE BOOK OVERLAY ═══ -->
+  <div class="rb-overlay" id="recipeBookOverlay">
+    <div class="rb-header">
+      <span class="rb-icon">📖</span>
+      <div class="rb-title">RECIPE BOOK</div>
+      <div class="rb-sub" id="rbSub">STAGE 1 — PLAN YOUR DISHES</div>
+    </div>
+    <div class="rb-new-banner hidden" id="rbNewBanner">✨ NEW RECIPE UNLOCKED!</div>
+    <div class="rb-kitchen" id="rbKitchen">
+      <span class="rb-kitchen-label">YOUR KITCHEN:</span>
+    </div>
+    <div class="rb-grid" id="rbGrid"></div>
+    <div class="rb-footer">
+      <button class="rb-open-btn" onclick="closeRecipeBook()">OPEN FRIDGE 🧊</button>
+    </div>
+  </div>
+
+  <!-- ═══ RECIPE DETAIL POPUP (recipe book context) ═══ -->
+  <div class="rb-detail-bg" id="rbDetailBg" onclick="closeRbDetail(event)">
+    <div class="rb-detail" id="rbDetail">
+      <div class="rb-detail-top">
+        <div class="rb-detail-emoji" id="rbDetailEmoji">🍽️</div>
+        <div>
+          <div class="rb-detail-name" id="rbDetailName">Recipe</div>
+          <div class="rb-detail-diff" id="rbDetailDiff"></div>
+          <span class="rb-detail-equip" id="rbDetailEquip"></span>
+        </div>
+      </div>
+      <div class="rb-detail-section">INGREDIENTS NEEDED</div>
+      <div class="rb-detail-ingrs" id="rbDetailIngrs"></div>
+      <div class="rb-detail-section">COOKING STEPS</div>
+      <div class="rb-detail-steps" id="rbDetailSteps"></div>
+      <button class="rb-detail-close" onclick="closeRbDetail()">✕ CLOSE</button>
+    </div>
+  </div>
+
+  <!-- ═══ FRIDGE OVERLAY ═══ -->
+  <div class="fridge-overlay" id="fridgeOverlay">
+    <div class="fridge-header">
+      <span class="fridge-icon">🧊</span>
+      <div class="fridge-title">FRIDGE RAID!</div>
+      <div class="fridge-sub">GRAB EVERYTHING YOU NEED BEFORE TIME RUNS OUT</div>
+    </div>
+    <div class="fridge-countdown-row">
+      <div class="fridge-timer-num" id="fridgeTimer">10</div>
+      <div class="fridge-bar-track"><div class="fridge-bar" id="fridgeBar"></div></div>
+    </div>
+    <div class="fridge-tray-info" id="fridgeTrayInfo">ALL INGREDIENTS AVAILABLE</div>
+    <div class="fridge-grid" id="fridgeGrid"></div>
+    <div class="fridge-footer">
+      <div class="fridge-grab-total" id="fridgeGrabTotal">0 items grabbed</div>
+      <button class="fridge-done-btn" onclick="closeFridge()">DONE SHOPPING →</button>
+    </div>
+  </div>
+
+  <!-- ═══ AUTH SCREEN ═══ -->
+  <div class="auth-screen" id="authScreen">
+    <div class="auth-box">
+      <span class="auth-logo">👨‍🍳</span>
+      <div class="auth-game-title">THE COOKING SHOW</div>
+      <p class="auth-sub">SIGN IN OR CREATE AN ACCOUNT</p>
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="authTabLogin" onclick="authSwitchTab('login')">LOGIN</button>
+        <button class="auth-tab" id="authTabRegister" onclick="authSwitchTab('register')">REGISTER</button>
+      </div>
+      <input class="auth-field" id="authUsername" type="text" placeholder="USERNAME" maxlength="20" autocomplete="username" spellcheck="false" />
+      <input class="auth-field" id="authPassword" type="password" placeholder="PASSWORD" maxlength="50" autocomplete="current-password" />
+      <button class="auth-submit" id="authSubmitBtn" onclick="authSubmit()">LOGIN</button>
+      <div class="auth-error" id="authError"></div>
+    </div>
+  </div>
+
+  <!-- ═══ START SCREEN ═══ -->
+  <div class="start-screen" id="startScreen">
+    <div class="start-content">
+      <span class="start-logo">👨‍🍳</span>
+      <div class="start-game-title">THE COOKING SHOW</div>
+      <p class="start-sub">A COMPETITIVE COOKING GAME</p>
+      <p id="startWelcome" style="color:#4ade80;font-size:11px;letter-spacing:2px;margin-bottom:8px;min-height:16px;"></p>
+      <div class="start-btns">
+        <button class="start-btn primary" onclick="clickStartGame()">▶ START GAME</button>
+        <button class="start-btn secondary" onclick="openHowToPlay()">📖 HOW TO PLAY</button>
+        <button class="start-btn secondary" onclick="openSettings()">⚙️ SETTINGS</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ IN-GAME GEAR / MENU ═══ -->
+  <button class="ingame-gear" id="ingameGear" onclick="toggleGameMenu()" title="Menu">⚙️</button>
+  <div class="game-menu-panel" id="gameMenuPanel">
+    <div class="gm-item" onclick="openSettings();closeGameMenu()">⚙️ &nbsp;SETTINGS</div>
+    <div class="gm-item" onclick="openHowToPlay();closeGameMenu()">📖 &nbsp;HOW TO PLAY</div>
+    <div class="gm-divider"></div>
+    <div class="gm-item" onclick="closeGameMenu();startNewGame()">🔄 &nbsp;NEW GAME</div>
+    <div class="gm-item danger" onclick="closeGameMenu();returnToMenu()">🏠 &nbsp;MAIN MENU</div>
+  </div>
+
+  <!-- ═══ SETTINGS MODAL ═══ -->
+  <div class="modal-shell" id="settingsShell">
+    <div class="modal-box">
+      <div class="mbox-header">
+        <span style="font-size:24px">⚙️</span>
+        <div class="mbox-title">SETTINGS</div>
+        <button class="mbox-close" onclick="closeSettings()">✕</button>
+      </div>
+
+      <div class="setting-row">
+        <div><div class="setting-lbl">🎵 Music</div><div class="setting-sub">Background ambient music</div></div>
+        <button class="toggle-pill on" id="musicTogglePill" onclick="settingToggleMusic()"></button>
+      </div>
+
+      <div class="setting-row">
+        <div><div class="setting-lbl">🔊 Volume</div><div class="setting-sub">Music volume level</div></div>
+        <input type="range" class="styled" id="volumeSlider" min="1" max="10" value="6" oninput="settingVolume(this.value)">
+      </div>
+
+      <div class="setting-row">
+        <div><div class="setting-lbl">⏱️ Cooking Speed</div><div class="setting-sub">Time allowed per cooking step</div></div>
+        <div class="seg-group" id="speedSeg">
+          <button class="seg-opt" onclick="setSpeed('relaxed')">😌 EASY</button>
+          <button class="seg-opt active" onclick="setSpeed('normal')">👨‍🍳 NORMAL</button>
+          <button class="seg-opt" onclick="setSpeed('hard')">🔥 HARD</button>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div><div class="setting-lbl">👁️ Show Tips</div><div class="setting-sub">Mini-game instructions during cooking</div></div>
+        <button class="toggle-pill on" id="tipsTogglePill" onclick="settingToggleTips()"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ HOW TO PLAY MODAL ═══ -->
+  <div class="modal-shell" id="htpShell">
+    <div class="modal-box">
+      <div class="mbox-header">
+        <span style="font-size:24px">📖</span>
+        <div class="mbox-title">HOW TO PLAY</div>
+        <button class="mbox-close" onclick="closeHowToPlay()">✕</button>
+      </div>
+
+      <div class="htp-section">
+        <div class="htp-section-label">THE BASICS</div>
+        <div class="htp-card"><div class="htp-icon">🌾</div><div><strong>Collect Ingredients</strong><p>Click any ingredient in the grid to add it to your inventory. You need to collect all the required ingredients for a recipe before you can cook it.</p></div></div>
+        <div class="htp-card"><div class="htp-icon">⚗️</div><div><strong>Craft Special Items</strong><p>Some recipes require crafted ingredients like Pasta or Dough. Select a crafting recipe in the Craft Station — it'll consume two base ingredients from your inventory and produce the crafted item.</p></div></div>
+        <div class="htp-card"><div class="htp-icon">📖</div><div><strong>Pick a Recipe</strong><p>Click any recipe card to see what it needs. If you have all the ingredients AND the required equipment in your kitchen, the <strong style="color:#4ade80">✓ READY</strong> badge lights up and you can cook it.</p></div></div>
+        <div class="htp-card"><div class="htp-icon">🍳</div><div><strong>Equipment Matters</strong><p>Each recipe requires a specific piece of kitchen equipment (Pan, Oven, Wok…). You start with 3 random tools. When you advance a stage, your equipment is refreshed — so plan ahead!</p></div></div>
+      </div>
+
+      <div class="htp-section">
+        <div class="htp-section-label">COOKING MINI-GAMES</div>
+        <p style="color:#475569;font-size:11px;margin-bottom:12px">Each cooking step triggers one of three mini-games. You have a countdown timer per step — fail and your ingredients are lost!</p>
+        <div class="htp-card">
+          <div class="htp-icon">🔪</div>
+          <div>
+            <strong><span class="mg-badge mg-mash">MASH</span> Rapid Clicking</strong>
+            <p>A big emoji target appears. Click it as fast as you can the required number of times before time runs out. Harder recipes need more clicks. Actions: Chop, Beat, Whip, Form, Drain, Garnish.</p>
+          </div>
+        </div>
+        <div class="htp-card">
+          <div class="htp-icon">🎯</div>
+          <div>
+            <strong><span class="mg-badge mg-timing">TIMING</span> Hit the Zone</strong>
+            <p>A ball bounces back and forth on a track. Press TAP when it's inside the green zone. Miss = time penalty. The zone gets narrower on harder recipes. Actions: Flip, Sear, Bake, Slice, Caramelize, Toast, Rest, Fold, Finish.</p>
+          </div>
+        </div>
+        <div class="htp-card">
+          <div class="htp-icon">🌡️</div>
+          <div>
+            <strong><span class="mg-badge mg-hold">HOLD</span> Temperature Control</strong>
+            <p>Hold the button to raise a temperature gauge. Release to let it fall. Keep it in the green zone for 2 continuous seconds to succeed. Everything else uses this: Heat, Simmer, Stir, Season, Fry, Cook, and more.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="htp-section">
+        <div class="htp-section-label">SCORING &amp; PROGRESSION</div>
+        <div class="htp-card"><div class="htp-icon">⭐</div><div><strong>Judge Ratings</strong><p>Three judges rate your dish 1–5 stars. Each judge has a specialty — Gordon loves French cuisine, Martha prefers American classics, Bobby is all about street food. Match their tastes for higher scores.</p></div></div>
+        <div class="htp-card"><div class="htp-icon">🏆</div><div><strong>Stage Progression</strong><p>Finishing any recipe advances you to the next stage. Each stage unlocks one brand-new recipe and refreshes your kitchen equipment. There are 35 recipes to unlock total — can you master them all?</p></div></div>
+      </div>
+
+      <button class="start-btn primary" style="width:100%;margin-top:4px" onclick="closeHowToPlay()">GOT IT — LET'S COOK! 🍳</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="title-screen">
+      <h1>👨‍🍳 THE COOKING SHOW 🍽️</h1>
+      <p>COLLECT · CRAFT · COOK · COMPETE</p>
+    </div>
+    <!-- music toggle fixed bottom-right -->
+    <button class="music-btn" id="musicBtn" onclick="toggleMusic()" title="Toggle music">🎵</button>
+
+    <div class="top-stats">
+      <div class="stat-box"><div class="stat-label">STAGE</div><div class="stat-value" id="stageDisplay">1</div><div style="font-size:9px;letter-spacing:2px;margin-top:3px" id="tierLabel">BEGINNER</div></div>
+      <div class="stat-box"><div class="stat-label">SCORE</div><div class="stat-value" id="scoreDisplay">0</div></div>
+      <div class="stat-box"><div class="stat-label">RECIPES</div><div class="stat-value" id="recipesUnlockedDisplay">4/20</div></div>
+    </div>
+
+    <div class="main-grid">
+      <div class="game-screen">
+        <div class="section-title">🌾 INGREDIENTS — click to collect</div>
+        <div class="ingredients-grid" id="ingredientsTray"></div>
+
+        <div class="section-title">⚗️ CRAFT STATION — click two recipes to combine</div>
+        <div class="crafting-area">
+          <div class="craft-grid" id="craftingOptions"></div>
+        </div>
+
+        <div class="section-title">📦 INVENTORY</div>
+        <div class="inventory-area">
+          <div class="inventory" id="inventory"><span class="inv-empty">EMPTY — pick some ingredients above</span></div>
+        </div>
+
+        <div class="section-title">📖 RECIPE BOOK — click any recipe for details</div>
+        <div class="recipes-section" id="recipesGrid"></div>
+      </div>
+
+      <div class="sidebar">
+        <div class="panel">
+          <div class="panel-title">👨‍⚖️ JUDGES</div>
+          <div id="judgesPanel"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">🍳 EQUIPMENT</div>
+          <div id="equipmentList"></div>
+        </div>
+        <button class="new-game-btn" onclick="startNewGame()">🔄 NEW GAME</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STAGE-UP TOAST -->
+  <div class="toast" id="toast">
+    <div class="toast-emoji" id="toastEmoji">🍽️</div>
+    <div><div class="toast-title" id="toastTitle">STAGE UP!</div><div class="toast-body" id="toastBody">New recipe</div></div>
+  </div>
+
+  <!-- OVERLAY -->
+  <div class="overlay-bg" id="overlayBg" onclick="closeRecipeModal()"></div>
+
+  <!-- RECIPE DETAIL MODAL -->
+  <div class="recipe-modal" id="recipeModal">
+    <div class="modal-header">
+      <div class="modal-dish-emoji" id="modalEmoji">🍽️</div>
+      <div><div class="modal-title" id="modalTitle">Recipe</div><div class="modal-subtitle" id="modalSubtitle"></div></div>
+    </div>
+    <div class="modal-info-pills" id="modalInfo"></div>
+    <div class="modal-section">
+      <div class="modal-label">INGREDIENTS NEEDED</div>
+      <div class="modal-ingredients" id="modalIngredients"></div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-label">COOKING STEPS</div>
+      <div class="modal-steps" id="modalSteps"></div>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-close-btn" onclick="closeRecipeModal()">✕ CLOSE</button>
+      <button class="modal-cook-btn" id="modalCookBtn" onclick="cookFromModal()">🍳 COOK THIS!</button>
+    </div>
+  </div>
+
+  <!-- ═══ COOKING GAME FULL SCREEN ═══ -->
+  <div class="cooking-overlay" id="cookingGame">
+    <div class="cook-top">
+      <div>
+        <div class="cook-recipe-label">NOW COOKING</div>
+        <div class="cook-recipe-name-big" id="cookRecipeName">...</div>
+      </div>
+      <div id="cookPanEmoji" style="font-size:52px">🍳</div>
+    </div>
+
+    <!-- Step progress dots -->
+    <div class="steps-track" id="stepsTrack"></div>
+
+    <!-- Animated scene -->
+    <div class="cook-scene">
+      <div class="steam-wrap"><div class="wisp"></div><div class="wisp"></div><div class="wisp"></div></div>
+      <div style="font-size:64px;animation:panSizzle .6s ease-in-out infinite alternate" id="cookFoodEmoji">🍳</div>
+      <div class="flames-row">🔥🔥🔥</div>
+    </div>
+
+    <!-- Current action label -->
+    <div class="challenge-action-label" id="challengeLabel">—</div>
+
+    <!-- Challenge box -->
+    <div class="challenge-box" id="challengeBox">
+
+      <!-- TIMING GAME: tap when ball is in the green zone -->
+      <div class="mini-game hidden" id="timingGame">
+        <div class="challenge-instruction" id="timingInstruct">Tap when the ● hits the green zone!</div>
+        <div class="slider-track">
+          <div class="slider-green-zone" id="sliderGreen"></div>
+          <div class="slider-ball" id="sliderBall"></div>
+        </div>
+        <button class="timing-tap-btn" id="timingBtn" onclick="timingTap()">👆 TAP NOW!</button>
+      </div>
+
+      <!-- MASH GAME: click rapidly -->
+      <div class="mini-game hidden" id="mashGame">
+        <div class="challenge-instruction" id="mashInstruct">Click rapidly!</div>
+        <div class="mash-area">
+          <div class="mash-target" id="mashTarget" onclick="mashClick()">
+            <span id="mashEmoji">🔪</span>
+          </div>
+        </div>
+        <div class="mash-progress-row">
+          <div class="mash-bar"><div class="mash-fill" id="mashFill" style="width:0%"></div></div>
+          <div class="mash-count" id="mashCount">0/6</div>
+        </div>
+      </div>
+
+      <!-- HOLD GAME: hold button to keep temperature in the green zone -->
+      <div class="mini-game hidden" id="holdGame">
+        <div class="challenge-instruction">Hold the button to heat up — keep the bar in the 🟢 zone for 2 seconds!</div>
+        <div class="hold-game-inner">
+          <div class="gauge-track">
+            <div class="gauge-green-zone" id="gaugeGreen"></div>
+            <div class="gauge-fill" id="gaugeFill"></div>
+          </div>
+          <div class="hold-info">
+            <div class="hold-zone-label">🟢 PERFECT ZONE</div>
+            <div class="hold-timer-display" id="holdTimerDisplay">0.0s</div>
+            <div class="hold-timer-label">/ 2.0s in zone</div>
+            <br>
+            <div style="font-size:11px;color:#475569">Release to cool down<br>Hold to heat up</div>
+          </div>
+        </div>
+        <button class="hold-btn" id="holdBtn"
+          onmousedown="startHold(event)" onmouseup="stopHold()" onmouseleave="stopHold()"
+          ontouchstart="startHold(event)" ontouchend="stopHold()">
+          🔥 HOLD TO COOK
+        </button>
+      </div>
+    </div>
+
+    <!-- Per-step countdown bar -->
+    <div class="step-timer-row">
+      <div class="step-timer-bar"><div class="step-timer-fill" id="stepTimerFill"></div></div>
+      <div class="step-timer-label" id="stepTimerLabel">7.0</div>
+    </div>
+  </div>
+
+  <!-- DISH REVEAL -->
+  <div class="confetti-wrap" id="confettiWrap"></div>
+  <div class="dish-reveal" id="dishReveal">
+    <div class="dish-reveal-emoji" id="dishRevealEmoji">🍔</div>
+    <div class="dish-reveal-text" id="dishRevealText">COMPLETE!</div>
+  </div>
+
+  <!-- JUDGES RATING -->
+  <div class="overlay-bg" id="judgeOverlay"></div>
+  <div class="judge-screen" id="judgeScreen">
+    <div class="judge-screen-title">⭐ JUDGES RATE YOUR DISH ⭐</div>
+    <div class="dish-scored-emoji" id="judgesDishEmoji">🍽️</div>
+    <div id="judgesRatingContent"></div>
+    <div class="total-score-display" id="totalScore">+0 PTS</div>
+    <button class="continue-btn" onclick="closeJudgeScreen()">CONTINUE →</button>
+  </div>
+
+  <script>
+    /* ═══ DATA ═══ */
+    const INGREDIENT_EMOJI = {
+      'Avocado':'🥑','Bacon':'🥓','Basil':'🌿','Beef':'🥩','Bones':'🦴','Broth':'🍲',
+      'Buns':'🍞','Butter':'🧈','Chicken':'🍗','Chickpeas':'🫘','Chocolate':'🍫',
+      'Cilantro':'🌿','Coconut Milk':'🥥','Cow':'🐄','Cream':'🥛','Croutons':'🍞',
+      'Curry Paste':'🫙','Dough':'🫓','Dressing':'🫙','Eggs':'🥚','Fish':'🐟',
+      'Flour':'🌾','Garlic':'🧄','Green Onion':'🧅','Ground Beef':'🥩','Herbs':'🌿',
+      'Lemon':'🍋','Lettuce':'🥬','Lime':'🍋','Milk':'🥛','Mozzarella':'🧀',
+      'Noodles':'🍜','Nori':'🌿','Oil':'🫙','Parmesan':'🧀','Peanuts':'🥜',
+      'Pig':'🐷','Pineapple':'🍍','Pork':'🥩','Protein':'🥩','Rice':'🍚',
+      'Rosemary':'🌿','Salt':'🧂','Sauce':'🫙','Shrimp':'🦐','Soy Sauce':'🫙',
+      'Spices':'🌶️','Sugar':'🍬','Tomato':'🍅','Tomato Sauce':'🍅','Tortillas':'🫓',
+      'Vanilla':'🌿','Vegetables':'🥦','Vinegar':'🫙','Water':'💧','Wheat':'🌾','Yogurt':'🥛',
+      'Cabbage':'🥬','Duck':'🦆','Honey':'🍯','Mushrooms':'🍄','Potatoes':'🥔'
+    };
+    const RECIPE_EMOJI = {
+      caesar:'🥗',burger:'🍔',pancakes:'🥞',tacos:'🌮',stirfry:'🍳',carbonara:'🍝',
+      pizza:'🍕',pad_thai:'🍜',curry:'🍛',tacos_al_pastor:'🌮',risotto:'🫕',salmon:'🍣',
+      mousse:'🍫',sushi:'🍱',steak:'🥩',lasagna:'🍝',ramen:'🍜',tikka:'🍗',falafel:'🧆',creme:'🍮',
+      shakshuka:'🍳',fish_chips:'🐟',grilled_cheese:'🥪',
+      pho:'🍜',bibimbap:'🍚',gyoza:'🥟',paella:'🥘',jerk_chicken:'🍗',beef_stew:'🫕',seafood_chowder:'🦐',
+      tiramisu:'🍰',baklava:'🍯',beef_wellington:'🥩',duck_confit:'🦆',tempura:'🍤'
+    };
+    const ACTION_EMOJI = {
+      'Chop':'🔪','Mix':'🥄','Pour':'🫗','Toss':'🥗','Heat':'🔥','Cook':'🍳','Toast':'🍞',
+      'Assemble':'🏗️','Flip':'🔄','Brown':'🟤','Warm':'♨️','Fill':'🫙','Season':'🧂',
+      'Boil':'♨️','Fry':'🍳','Stir':'🥄','Plate':'🍽️','Stretch':'🫓','Sauce':'🫙',
+      'Cheese':'🧀','Bake':'🔥','Soak':'💧','Sear':'🔥','Simmer':'♨️','Paste':'🥄',
+      'Chicken':'🍗','Finish':'✨','Marinate':'🫙','Roll':'🌀','Slice':'🔪','Spread':'🧈',
+      'Baste':'🥄','Rest':'⏰','Layer':'📚','Garnish':'🌿','Whip':'🌀','Melt':'🔥',
+      'Beat':'🥄','Strain':'🫙','Caramelize':'🍬','Form':'⬜','Drain':'💧','Fold':'🫗'
+    };
+    const JUDGE_AVATAR = { Gordon:'👨‍🍳', Martha:'👩‍🍳', Bobby:'🧑‍🍳' };
+    const EQUIPMENT_EMOJI = { Bowl:'🥣',Pan:'🍳',Pot:'🫕',Skillet:'🍳',Wok:'🥘',Oven:'🔥',Mat:'🍱',Fryer:'🍟' };
+    const CONFETTI_COLORS = ['#f97316','#facc15','#4ade80','#38bdf8','#c084fc','#fb7185'];
+
+    // Mini-game type per cooking action
+    const ACTION_TYPE = {
+      // TIMING: tap when the moving ball hits the green zone
+      'Flip':'timing','Sear':'timing','Slice':'timing','Caramelize':'timing',
+      'Rest':'timing','Toast':'timing','Bake':'timing','Finish':'timing','Fold':'timing',
+      // MASH: click the target rapidly N times
+      'Chop':'mash','Beat':'mash','Form':'mash','Drain':'mash','Whip':'mash','Garnish':'mash',
+      // HOLD: everything else — hold button to keep temperature in the zone
+    };
+    function getActionType(a) { return ACTION_TYPE[a] || 'hold'; }
+
+    const JUDGES = [
+      { name:'Gordon', specialty:'French Cuisine',  likes:['Risotto','Salmon','Steak','Duck','Wellington','Tiramisu','Confit'] },
+      { name:'Martha', specialty:'Classic American', likes:['Lasagna','Pizza','Curry','Chowder','Grilled','Stew','Baklava'] },
+      { name:'Bobby',  specialty:'Street Food',      likes:['Burger','Taco','Ramen','Gyoza','Jerk','Tempura','Pho','Shakshuka','Bibimbap','Paella'] }
+    ];
+    const CRAFTING_RECIPES = {
+      pasta:      {name:'Pasta',       emoji:'🍝',needs:['Wheat','Eggs']},
+      beef:       {name:'Beef',        emoji:'🥩',needs:['Cow','Salt']},
+      cheese:     {name:'Cheese',      emoji:'🧀',needs:['Milk','Salt']},
+      dough:      {name:'Dough',       emoji:'🫓',needs:['Flour','Water']},
+      sauce:      {name:'Tomato Sauce',emoji:'🍅',needs:['Tomato','Garlic']},
+      broth:      {name:'Broth',       emoji:'🍲',needs:['Bones','Water']},
+      noodles:    {name:'Noodles',     emoji:'🍜',needs:['Flour','Eggs']},
+      pork:       {name:'Pork',        emoji:'🥩',needs:['Pig','Salt']},
+      mozzarella: {name:'Mozzarella',  emoji:'🧀',needs:['Milk','Vinegar']},
+      ground_beef:{name:'Ground Beef', emoji:'🥩',needs:['Cow','Garlic']}
+    };
+    const RECIPES = {
+      caesar:         {name:'Caesar Salad',    ingr:['Croutons','Dressing','Lettuce','Parmesan'], equip:'Bowl',   diff:1,actions:['Chop','Mix','Pour','Toss'],          unlocked:true},
+      burger:         {name:'Gourmet Burger',  ingr:['Beef','Buns','Lettuce','Tomato'],           equip:'Skillet',diff:1,actions:['Heat','Cook','Toast','Assemble'],     unlocked:true},
+      pancakes:       {name:'Fluffy Pancakes', ingr:['Butter','Eggs','Flour','Milk'],             equip:'Pan',    diff:1,actions:['Mix','Heat','Pour','Flip'],            unlocked:true},
+      tacos:          {name:'Beef Tacos',      ingr:['Beef','Cilantro','Lime','Tortillas'],       equip:'Skillet',diff:1,actions:['Brown','Warm','Fill','Season'],        unlocked:true},
+      stirfry:        {name:'Stir Fry',        ingr:['Oil','Protein','Soy Sauce','Vegetables'],  equip:'Wok',    diff:2,actions:['Heat','Cook','Stir','Season','Plate'], unlocked:false},
+      carbonara:      {name:'Pasta Carbonara', ingr:['Bacon','Cheese','Eggs','Pasta'],           equip:'Pot',    diff:2,actions:['Boil','Fry','Mix','Toss'],             unlocked:false},
+      pizza:          {name:'Margherita Pizza',ingr:['Basil','Dough','Mozzarella','Tomato Sauce'],equip:'Oven',  diff:2,actions:['Stretch','Sauce','Cheese','Bake'],      unlocked:false},
+      pad_thai:       {name:'Pad Thai',        ingr:['Lime','Noodles','Peanuts','Shrimp'],       equip:'Wok',    diff:2,actions:['Soak','Fry','Toss','Plate'],           unlocked:false},
+      curry:          {name:'Chicken Curry',   ingr:['Chicken','Coconut Milk','Curry Paste','Rice'],equip:'Pot', diff:2,actions:['Paste','Chicken','Simmer','Plate'],    unlocked:false},
+      tacos_al_pastor:{name:'Tacos al Pastor', ingr:['Cilantro','Pineapple','Pork','Tortillas'], equip:'Skillet',diff:2,actions:['Marinate','Cook','Warm','Assemble'],   unlocked:false},
+      risotto:        {name:'Risotto',         ingr:['Broth','Butter','Cheese','Rice'],          equip:'Pot',    diff:3,actions:['Toast','Stir','Pour','Stir','Finish'], unlocked:false},
+      salmon:         {name:'Salmon',          ingr:['Butter','Fish','Herbs','Lemon'],           equip:'Pan',    diff:3,actions:['Heat','Season','Cook','Flip','Plate'],  unlocked:false},
+      mousse:         {name:'Chocolate Mousse',ingr:['Chocolate','Cream','Eggs','Sugar'],        equip:'Bowl',   diff:3,actions:['Melt','Beat','Whip','Fold'],            unlocked:false},
+      sushi:          {name:'Sushi Roll',      ingr:['Avocado','Fish','Nori','Rice'],            equip:'Mat',    diff:3,actions:['Spread','Fill','Roll','Slice'],         unlocked:false},
+      steak:          {name:'Ribeye Steak',    ingr:['Beef','Butter','Garlic','Rosemary'],       equip:'Skillet',diff:3,actions:['Heat','Sear','Flip','Baste','Rest'],    unlocked:false},
+      lasagna:        {name:'Lasagna',         ingr:['Cheese','Ground Beef','Pasta','Tomato Sauce'],equip:'Oven',diff:3,actions:['Brown','Layer','Layer','Bake'],         unlocked:false},
+      ramen:          {name:'Tonkotsu Ramen',  ingr:['Eggs','Green Onion','Noodles','Pork'],     equip:'Pot',    diff:3,actions:['Boil','Cook','Assemble','Garnish'],     unlocked:false},
+      tikka:          {name:'Chicken Tikka',   ingr:['Chicken','Spices','Tomato Sauce','Yogurt'],equip:'Pan',    diff:3,actions:['Marinate','Cook','Simmer','Finish'],    unlocked:false},
+      falafel:        {name:'Crispy Falafel',  ingr:['Chickpeas','Flour','Oil','Spices'],        equip:'Fryer',  diff:3,actions:['Mix','Form','Fry','Drain'],             unlocked:false},
+      creme:          {name:'Crème Brûlée',    ingr:['Cream','Eggs','Sugar','Vanilla'],          equip:'Oven',   diff:3,actions:['Mix','Strain','Bake','Caramelize'],     unlocked:false},
+      // ── NEW RECIPES ──
+      shakshuka:      {name:'Shakshuka',       ingr:['Eggs','Garlic','Spices','Tomato'],          equip:'Pan',    diff:1,actions:['Heat','Season','Simmer','Cook'],          unlocked:false},
+      fish_chips:     {name:'Fish & Chips',    ingr:['Fish','Flour','Oil','Potatoes'],            equip:'Fryer',  diff:1,actions:['Mix','Fry','Drain','Plate'],               unlocked:false},
+      grilled_cheese: {name:'Grilled Cheese',  ingr:['Buns','Butter','Cheese','Tomato'],          equip:'Pan',    diff:1,actions:['Spread','Layer','Toast','Flip'],           unlocked:false},
+      pho:            {name:'Beef Pho',         ingr:['Beef','Broth','Herbs','Noodles'],           equip:'Pot',    diff:2,actions:['Boil','Simmer','Assemble','Garnish'],      unlocked:false},
+      bibimbap:       {name:'Bibimbap',         ingr:['Beef','Eggs','Rice','Vegetables'],          equip:'Bowl',   diff:2,actions:['Cook','Season','Assemble','Mix'],          unlocked:false},
+      gyoza:          {name:'Gyoza',            ingr:['Cabbage','Dough','Garlic','Pork'],          equip:'Pan',    diff:2,actions:['Mix','Fill','Fold','Fry'],                 unlocked:false},
+      paella:         {name:'Paella',           ingr:['Chicken','Rice','Shrimp','Spices'],         equip:'Pan',    diff:2,actions:['Heat','Fry','Simmer','Finish'],            unlocked:false},
+      jerk_chicken:   {name:'Jerk Chicken',     ingr:['Chicken','Garlic','Lime','Spices'],         equip:'Skillet',diff:2,actions:['Marinate','Cook','Baste','Plate'],        unlocked:false},
+      beef_stew:      {name:'Beef Stew',        ingr:['Beef','Broth','Potatoes','Vegetables'],     equip:'Pot',    diff:2,actions:['Brown','Simmer','Stir','Plate'],           unlocked:false},
+      seafood_chowder:{name:'Seafood Chowder',  ingr:['Bacon','Cream','Potatoes','Shrimp'],        equip:'Pot',    diff:2,actions:['Cook','Simmer','Stir','Plate'],            unlocked:false},
+      tiramisu:       {name:'Tiramisu',         ingr:['Cream','Eggs','Sugar','Vanilla'],           equip:'Bowl',   diff:3,actions:['Beat','Layer','Rest','Garnish'],           unlocked:false},
+      baklava:        {name:'Baklava',          ingr:['Butter','Dough','Honey','Peanuts'],         equip:'Oven',   diff:3,actions:['Layer','Bake','Slice','Sauce'],            unlocked:false},
+      beef_wellington:{name:'Beef Wellington',  ingr:['Beef','Butter','Dough','Mushrooms'],        equip:'Oven',   diff:3,actions:['Sear','Spread','Layer','Bake'],            unlocked:false},
+      duck_confit:    {name:'Duck Confit',      ingr:['Duck','Garlic','Herbs','Oil'],              equip:'Oven',   diff:3,actions:['Season','Simmer','Sear','Rest'],           unlocked:false},
+      tempura:        {name:'Shrimp Tempura',   ingr:['Eggs','Flour','Oil','Shrimp'],              equip:'Fryer',  diff:3,actions:['Mix','Fill','Fry','Drain'],                unlocked:false}
+    };
+    const ALL_INGREDIENTS = [
+      'Avocado','Bacon','Basil','Beef','Bones','Broth','Buns','Butter','Chicken','Chickpeas',
+      'Chocolate','Cilantro','Coconut Milk','Cow','Cream','Croutons','Curry Paste','Dough',
+      'Dressing','Eggs','Fish','Flour','Garlic','Green Onion','Ground Beef','Herbs','Lemon',
+      'Lettuce','Lime','Milk','Mozzarella','Noodles','Nori','Oil','Parmesan','Peanuts','Pig',
+      'Pineapple','Pork','Protein','Rice','Rosemary','Salt','Sauce','Shrimp','Soy Sauce',
+      'Spices','Sugar','Tomato','Tomato Sauce','Tortillas','Vanilla','Vegetables','Vinegar',
+      'Water','Wheat','Yogurt',
+      'Cabbage','Duck','Honey','Mushrooms','Potatoes'
+    ];
+    const EQUIPMENT_LIST = ['Bowl','Pan','Pot','Skillet','Wok','Oven','Mat','Fryer'];
+
+    /* ═══ STATE ═══ */
+    let game = { stage:1, score:0, inventory:[], cooking:null, equipment:[], currentRecipe:null, judgeRatings:{Gordon:0,Martha:0,Bobby:0}, selectedCraft:[] };
+
+    // Challenge state (one step at a time)
+    let chal = { interval:null, done:true };
+
+    /* ═══ INIT ═══ */
+    function startNewGame() {
+      if (chal.interval) clearInterval(chal.interval);
+      game = { stage:1, score:0, inventory:[], cooking:null, equipment:[], currentRecipe:null, judgeRatings:{Gordon:0,Martha:0,Bobby:0}, selectedCraft:[], trayIngredients:[] };
+      unlockRecipesForStage(1);
+      generateEquipment();
+      refreshTray();
+      updateUI();
+    }
+
+    function unlockRecipesForStage(stage) {
+      const keys = Object.keys(RECIPES);
+      const max = Math.min(3 + stage, Object.keys(RECIPES).length);
+      keys.forEach((k,i) => { RECIPES[k].unlocked = i < max; });
+    }
+
+    function generateEquipment() {
+      game.equipment = [];
+      const picked = new Set();
+      while (game.equipment.length < 3) {
+        const e = EQUIPMENT_LIST[Math.floor(Math.random() * EQUIPMENT_LIST.length)];
+        if (!picked.has(e)) { picked.add(e); game.equipment.push(e); }
+      }
+    }
+
+    const STAGE_TIERS = [
+      {min:1,  label:'BEGINNER',  color:'#4ade80'},
+      {min:4,  label:'SIMMERING', color:'#facc15'},
+      {min:8,  label:'SPICY',     color:'#fb923c'},
+      {min:13, label:'FLAMBÉ',    color:'#f87171'},
+      {min:19, label:'INFERNO',   color:'#c084fc'},
+    ];
+    function getStageTier(stage) {
+      return [...STAGE_TIERS].reverse().find(t => stage >= t.min) || STAGE_TIERS[0];
+    }
+
+    function refreshTray() {
+      // Stages 1-3: full ingredient list. Stage 4+: shrinking random subset.
+      const traySize = Math.max(25, ALL_INGREDIENTS.length - Math.floor((game.stage - 1) * 2));
+      if (traySize >= ALL_INGREDIENTS.length) {
+        game.trayIngredients = [...ALL_INGREDIENTS];
+      } else {
+        const shuffled = [...ALL_INGREDIENTS].sort(() => Math.random() - 0.5);
+        game.trayIngredients = shuffled.slice(0, traySize).sort();
+      }
+    }
+
+    /* ═══ INGREDIENT PICK ═══ */
+    function pickIngredient(ing, btn) {
+      game.inventory.push({ name:ing, crafted:false });
+      if (btn) {
+        const r = btn.getBoundingClientRect();
+        const el = document.createElement('div');
+        el.className = 'fly-up';
+        el.textContent = INGREDIENT_EMOJI[ing] || '✨';
+        el.style.left = (r.left + r.width/2 - 14) + 'px';
+        el.style.top  = (r.top + window.scrollY) + 'px';
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 750);
+      }
+      updateUI();
+    }
+
+    /* ═══ CRAFTING ═══ */
+    function toggleCraft(key) {
+      const idx = game.selectedCraft.indexOf(key);
+      if (idx > -1) game.selectedCraft.splice(idx,1);
+      else { game.selectedCraft.push(key); if (game.selectedCraft.length === 2) doCraft(); }
+      updateUI();
+    }
+    function doCraft() {
+      const craft = CRAFTING_RECIPES[game.selectedCraft[0]];
+      if (!craft) { game.selectedCraft = []; return; }
+      const [a,b] = craft.needs;
+      let r1=false, r2=false;
+      game.inventory = game.inventory.filter(i => {
+        if (i.name===a && !r1) { r1=true; return false; }
+        if (i.name===b && !r2) { r2=true; return false; }
+        return true;
+      });
+      if (r1 && r2) game.inventory.push({ name:craft.name, crafted:true });
+      game.selectedCraft = [];
+      updateUI();
+    }
+
+    /* ═══ START COOKING ═══ */
+    function startCooking(recipeKey) {
+      const recipe = RECIPES[recipeKey];
+      const hasAll  = recipe.ingr.every(ing => game.inventory.some(inv => inv.name === ing));
+      const hasEquip = game.equipment.includes(recipe.equip);
+      if (!hasAll || !hasEquip) return;
+
+      game.currentRecipe = recipeKey;
+      game.cooking = recipe;
+      game.actionIndex = 0;
+      game.correctActions = 0;
+
+      const overlay = document.getElementById('cookingGame');
+      overlay.classList.add('show');
+      document.getElementById('cookRecipeName').textContent = recipe.name;
+      document.getElementById('cookPanEmoji').textContent = RECIPE_EMOJI[recipeKey] || '🍳';
+      document.getElementById('cookFoodEmoji').textContent = RECIPE_EMOJI[recipeKey] || '🍳';
+
+      updateStepsTrack();
+      startChallengeForAction(recipe.actions[0]);
+    }
+
+    /* ═══ STEP PROGRESS ═══ */
+    function updateStepsTrack() {
+      const actions = game.cooking.actions;
+      document.getElementById('stepsTrack').innerHTML = actions.map((a,i) => {
+        const emoji = ACTION_EMOJI[a] || '👆';
+        const cls = i < game.actionIndex ? 'done' : i === game.actionIndex ? 'current' : '';
+        return `<div class="step-pip ${cls}" title="${a}">${i < game.actionIndex ? '✓' : emoji}</div>`;
+      }).join('');
+    }
+
+    /* ═══════════════════════════════════════════
+       CHALLENGE ENGINE
+    ═══════════════════════════════════════════ */
+    function startChallengeForAction(action) {
+      if (chal.interval) clearInterval(chal.interval);
+
+      const type = getActionType(action);
+      const diff = game.cooking.diff;
+      const s = Math.min(game.stage - 1, 18); // stage scaling (caps at 18 for sanity)
+
+      const baseTime = Math.max(5, (14 - diff * 2 - s * 0.3) * SPEED_MULT[settings.speed]);
+      const holdLow  = Math.min(40, 32 + s * 0.5);  // zone narrows upward
+      const holdHigh = Math.max(48, 58 - s * 0.5);  // zone narrows downward
+
+      chal = {
+        type, action,
+        done: false,
+        timeLeft: baseTime, maxTime: baseTime,
+        interval: null,
+        // timing
+        pos: 10, dir: 1,
+        speed: 1.0 + diff * 0.35 + s * 0.08,           // ball accelerates per stage
+        greenMin: 30 + Math.random() * 15,
+        greenMax: 0,
+        // mash
+        clicks: 0, clicksNeeded: 4 + diff * 2 + Math.floor(s * 0.6),  // more clicks needed
+        // hold
+        level: 0, holding: false, inZoneTime: 0,
+        greenLow: holdLow, greenHigh: holdHigh,
+      };
+      chal.greenMax = chal.greenMin + Math.max(8, 28 - diff * 4 - s * 1.1); // zone shrinks
+
+      // Show correct mini-game
+      ['timingGame','mashGame','holdGame'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+      document.getElementById(type + 'Game').classList.remove('hidden');
+
+      // Label
+      document.getElementById('challengeLabel').textContent =
+        (ACTION_EMOJI[action] || '') + ' ' + action.toUpperCase();
+
+      if (type === 'timing') {
+        const green = document.getElementById('sliderGreen');
+        green.style.left  = chal.greenMin + '%';
+        green.style.width = (chal.greenMax - chal.greenMin) + '%';
+        document.getElementById('sliderBall').style.left = '10%';
+        document.getElementById('sliderBall').className = 'slider-ball';
+        const tTip = settings.showTips ? `Tap when the ● hits the 🟢 zone! (zone width shrinks at higher difficulty)` : '';
+        document.getElementById('timingInstruct').textContent = tTip;
+      }
+
+      if (type === 'mash') {
+        const emojiMap = { Chop:'🔪',Beat:'🥄',Form:'⬜',Drain:'💧',Whip:'🌀',Garnish:'🌿' };
+        document.getElementById('mashEmoji').textContent = emojiMap[action] || '👆';
+        document.getElementById('mashCount').textContent = `0/${chal.clicksNeeded}`;
+        document.getElementById('mashFill').style.width = '0%';
+        document.getElementById('mashInstruct').textContent = settings.showTips ? `${action} it ${chal.clicksNeeded} times!` : '';
+      }
+
+      if (type === 'hold') {
+        chal.level = 0;
+        document.getElementById('gaugeFill').style.height = '0%';
+        document.getElementById('gaugeFill').className = 'gauge-fill';
+        const green = document.getElementById('gaugeGreen');
+        green.style.bottom = chal.greenLow + '%';
+        green.style.height = (chal.greenHigh - chal.greenLow) + '%';
+        document.getElementById('holdTimerDisplay').textContent = '0.0s';
+        document.getElementById('holdBtn').classList.remove('active');
+        document.getElementById('holdBtn').textContent = '🔥 HOLD TO COOK';
+        chal.inZoneTime = 0;
+      }
+
+      // Reset step timer bar
+      document.getElementById('stepTimerFill').style.width = '100%';
+      document.getElementById('stepTimerLabel').textContent = '7.0';
+
+      // Reset challenge box border
+      const box = document.getElementById('challengeBox');
+      box.style.borderColor = '#1e293b';
+      box.style.boxShadow = '';
+
+      chal.interval = setInterval(tickChallenge, 50);
+    }
+
+    function tickChallenge() {
+      if (chal.done) return;
+
+      // Step countdown
+      chal.timeLeft -= 0.05;
+      const pct = Math.max(0, (chal.timeLeft / chal.maxTime) * 100);
+      document.getElementById('stepTimerFill').style.width = pct + '%';
+      document.getElementById('stepTimerLabel').textContent = Math.max(0, chal.timeLeft).toFixed(1);
+
+      if (chal.timeLeft <= 0) { failChallenge(); return; }
+
+      // ── TIMING ──
+      if (chal.type === 'timing') {
+        chal.pos += chal.dir * chal.speed;
+        if (chal.pos >= 100) { chal.pos = 100; chal.dir = -1; }
+        if (chal.pos <= 0)   { chal.pos = 0;   chal.dir = 1;  }
+        const ball = document.getElementById('sliderBall');
+        ball.style.left = chal.pos + '%';
+        const inZone = chal.pos >= chal.greenMin && chal.pos <= chal.greenMax;
+        ball.className = 'slider-ball' + (inZone ? ' in-zone' : '');
+      }
+
+      // ── HOLD ──
+      if (chal.type === 'hold') {
+        chal.level = chal.holding
+          ? Math.min(100, chal.level + 2.2)
+          : Math.max(0,   chal.level - 1.0);
+
+        const fill = document.getElementById('gaugeFill');
+        fill.style.height = chal.level + '%';
+        const inZone = chal.level >= chal.greenLow && chal.level <= chal.greenHigh;
+        fill.className = 'gauge-fill' + (chal.level > chal.greenHigh ? ' too-hot' : inZone ? ' perfect' : '');
+
+        if (inZone) {
+          chal.inZoneTime += 0.05;
+          document.getElementById('holdTimerDisplay').textContent = chal.inZoneTime.toFixed(1) + 's';
+          if (chal.inZoneTime >= 2.0) succeedChallenge();
+        } else {
+          chal.inZoneTime = 0;
+          document.getElementById('holdTimerDisplay').textContent = '0.0s';
+        }
+      }
+    }
+
+    /* ── TIMING tap ── */
+    function timingTap() {
+      if (chal.done || chal.type !== 'timing') return;
+      const inZone = chal.pos >= chal.greenMin && chal.pos <= chal.greenMax;
+      if (inZone) {
+        succeedChallenge();
+      } else {
+        const btn = document.getElementById('timingBtn');
+        btn.style.animation = 'shake .35s';
+        setTimeout(() => btn.style.animation = '', 360);
+        chal.timeLeft = Math.max(0, chal.timeLeft - 1.5); // penalty
+      }
+    }
+
+    /* ── MASH click ── */
+    function mashClick() {
+      if (chal.done || chal.type !== 'mash') return;
+      chal.clicks++;
+      const pct = (chal.clicks / chal.clicksNeeded) * 100;
+      document.getElementById('mashFill').style.width = pct + '%';
+      document.getElementById('mashCount').textContent = `${chal.clicks}/${chal.clicksNeeded}`;
+      // Bounce
+      const t = document.getElementById('mashTarget');
+      t.style.transform = 'scale(.86)';
+      setTimeout(() => t.style.transform = 'scale(1)', 90);
+      // Sparks
+      spawnSparks(t);
+      if (chal.clicks >= chal.clicksNeeded) succeedChallenge();
+    }
+
+    /* ── HOLD controls ── */
+    function startHold(e) {
+      if (e) e.preventDefault();
+      chal.holding = true;
+      const btn = document.getElementById('holdBtn');
+      btn.classList.add('active');
+      btn.textContent = '🔥 COOKING...';
+    }
+    function stopHold() {
+      chal.holding = false;
+      const btn = document.getElementById('holdBtn');
+      btn.classList.remove('active');
+      btn.textContent = '🔥 HOLD TO COOK';
+    }
+
+    /* ── Sparks ── */
+    function spawnSparks(origin) {
+      const r = origin ? origin.getBoundingClientRect() : { left: window.innerWidth/2, top: window.innerHeight/2, width:0, height:0 };
+      const cx = r.left + r.width/2;
+      const cy = r.top  + r.height/2;
+      ['⭐','✨','💥','🌟'].forEach((s,i) => {
+        const el = document.createElement('div');
+        el.className = 'spark';
+        el.textContent = s;
+        el.style.left = cx + 'px';
+        el.style.top  = cy + 'px';
+        const angle = (i/4) * Math.PI * 2;
+        const dist  = 50 + Math.random() * 40;
+        el.style.setProperty('--dx', Math.cos(angle)*dist+'px');
+        el.style.setProperty('--dy', Math.sin(angle)*dist+'px');
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 650);
+      });
+    }
+
+    /* ── SUCCESS ── */
+    function succeedChallenge() {
+      if (chal.done) return;
+      chal.done = true;
+      clearInterval(chal.interval);
+
+      // Green flash on box
+      const box = document.getElementById('challengeBox');
+      box.style.borderColor = '#4ade80';
+      box.style.boxShadow = '0 0 30px rgba(74,222,128,.4)';
+
+      game.correctActions++;
+      game.actionIndex++;
+
+      setTimeout(() => {
+        box.style.borderColor = '#1e293b';
+        box.style.boxShadow = '';
+        if (game.actionIndex >= game.cooking.actions.length) {
+          endCooking();
+        } else {
+          updateStepsTrack();
+          startChallengeForAction(game.cooking.actions[game.actionIndex]);
+        }
+      }, 300);
+    }
+
+    /* ── FAIL ── */
+    function failChallenge() {
+      if (chal.done) return;
+      chal.done = true;
+      clearInterval(chal.interval);
+
+      // Red flash
+      const box = document.getElementById('challengeBox');
+      box.style.borderColor = '#f87171';
+      box.style.boxShadow = '0 0 30px rgba(248,113,113,.4)';
+
+      setTimeout(() => {
+        document.getElementById('cookingGame').classList.remove('show');
+        const recipe = game.cooking;
+        game.inventory = game.inventory.filter(inv => !recipe.ingr.includes(inv.name));
+        game.cooking = null;
+        game.currentRecipe = null;
+        updateUI();
+      }, 700);
+    }
+
+    /* ── END COOKING ── */
+    function endCooking() {
+      document.getElementById('cookingGame').classList.remove('show');
+      game.inventory = game.inventory.filter(inv => !game.cooking.ingr.includes(inv.name));
+      showDishReveal(game.cooking, () => showJudgeRating(game.cooking));
+    }
+
+    /* ═══ DISH REVEAL ═══ */
+    function showDishReveal(recipe, cb) {
+      const emoji = RECIPE_EMOJI[game.currentRecipe] || '🍽️';
+      document.getElementById('dishRevealEmoji').textContent = emoji;
+      document.getElementById('dishRevealText').textContent = recipe.name.toUpperCase() + ' — DONE!';
+      const el = document.getElementById('dishReveal');
+      el.classList.add('show');
+      launchConfetti();
+      setTimeout(() => { el.classList.remove('show'); if (cb) cb(); }, 1900);
+    }
+
+    function launchConfetti() {
+      const wrap = document.getElementById('confettiWrap');
+      wrap.innerHTML = '';
+      for (let i = 0; i < 60; i++) {
+        const c = document.createElement('div');
+        c.className = 'confetti';
+        c.style.left = Math.random()*100+'vw';
+        c.style.background = CONFETTI_COLORS[Math.floor(Math.random()*CONFETTI_COLORS.length)];
+        c.style.width  = (8+Math.random()*6)+'px';
+        c.style.height = (8+Math.random()*6)+'px';
+        c.style.borderRadius = Math.random()>.5?'50%':'2px';
+        c.style.animationDuration = (1.2+Math.random()*1.2)+'s';
+        c.style.animationDelay    = Math.random()*.6+'s';
+        wrap.appendChild(c);
+      }
+      setTimeout(() => { wrap.innerHTML = ''; }, 3000);
+    }
+
+    /* ═══ JUDGE RATING ═══ */
+    function showJudgeRating(recipe) {
+      const emoji = RECIPE_EMOJI[game.currentRecipe] || '🍽️';
+      document.getElementById('judgesDishEmoji').textContent = emoji;
+
+      let totalPoints = recipe.diff * 30;
+      let html = '';
+      let ratings = [];
+
+      JUDGES.forEach(judge => {
+        const likes = judge.likes.some(n => recipe.name.toLowerCase().includes(n.toLowerCase()));
+        const rating = likes ? Math.floor(Math.random()*2)+4 : Math.floor(Math.random()*3)+2;
+        ratings.push(rating);
+        html += `<div class="judge-row-rating">
+          <div class="jr-avatar">${JUDGE_AVATAR[judge.name]}</div>
+          <div class="jr-info">
+            <div class="jr-name">${judge.name} <span style="color:#64748b;font-size:10px">${judge.specialty}</span></div>
+            <div class="jr-stars">${'⭐'.repeat(rating)}${'☆'.repeat(5-rating)}</div>
+          </div></div>`;
+        game.judgeRatings[judge.name] = rating;
+      });
+
+      const avg = ratings.reduce((a,b)=>a+b,0)/ratings.length;
+      totalPoints += Math.round(avg*15);
+      game.score += Math.round(totalPoints);
+
+      document.getElementById('judgesRatingContent').innerHTML = html;
+      document.getElementById('totalScore').textContent = `+${Math.round(totalPoints)} PTS`;
+      document.getElementById('judgeOverlay').classList.add('show');
+      document.getElementById('judgeScreen').classList.add('show');
+
+      game.cooking = null;
+      game.currentRecipe = null;
+    }
+
+    function closeJudgeScreen() {
+      document.getElementById('judgeScreen').classList.remove('show');
+      document.getElementById('judgeOverlay').classList.remove('show');
+
+      const prevUnlocked = Object.values(RECIPES).filter(r => r.unlocked).length;
+      game.stage++;
+      unlockRecipesForStage(game.stage);
+      generateEquipment();
+      refreshTray();
+      updateUI();
+
+      // Find the newly unlocked recipe
+      const newKey = Object.keys(RECIPES)[prevUnlocked];
+      if (newKey && RECIPES[newKey]) {
+        const emoji = RECIPE_EMOJI[newKey] || '🍽️';
+        showToast(emoji, `STAGE ${game.stage} — NEW RECIPE!`, RECIPES[newKey].name);
+      }
+
+      openRecipeBook(newKey);
+    }
+
+    function showToast(emoji, title, body) {
+      document.getElementById('toastEmoji').textContent = emoji;
+      document.getElementById('toastTitle').textContent = title;
+      document.getElementById('toastBody').textContent = body;
+      const t = document.getElementById('toast');
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 4000);
+    }
+
+    /* ═══ RECIPE MODAL ═══ */
+    let modalRecipeKey = null;
+
+    function showRecipeDetail(key) {
+      const r = RECIPES[key];
+      modalRecipeKey = key;
+      const emoji = RECIPE_EMOJI[key] || '🍽️';
+      document.getElementById('modalEmoji').textContent = emoji;
+      document.getElementById('modalTitle').textContent = r.name;
+      document.getElementById('modalSubtitle').textContent = '⭐'.repeat(r.diff)+'☆'.repeat(3-r.diff)+' difficulty';
+      document.getElementById('modalInfo').innerHTML =
+        `<span class="pill">🍳 ${r.equip}</span><span class="pill">${r.diff===1?'Easy':r.diff===2?'Medium':'Hard'}</span>`;
+      document.getElementById('modalIngredients').innerHTML = r.ingr.map(ing => {
+        const have = game.inventory.some(inv => inv.name === ing);
+        return `<span class="modal-ingredient ${have?'have':''}">${INGREDIENT_EMOJI[ing]||'🥄'} ${have?'✓ ':''}${ing}</span>`;
+      }).join('');
+      document.getElementById('modalSteps').innerHTML = r.actions.map((a,i) =>
+        `<span class="modal-step"><span class="modal-step-num">${i+1}</span> ${ACTION_EMOJI[a]||''} ${a}</span>`
+      ).join('');
+      const hasAll  = r.ingr.every(ing => game.inventory.some(inv => inv.name === ing));
+      const hasEquip = game.equipment.includes(r.equip);
+      const btn = document.getElementById('modalCookBtn');
+      btn.disabled = !hasAll || !hasEquip;
+      btn.title = !hasEquip ? `Need ${r.equip}` : !hasAll ? 'Missing ingredients' : '';
+      document.getElementById('recipeModal').classList.add('show');
+      document.getElementById('overlayBg').classList.add('show');
+    }
+
+    function closeRecipeModal() {
+      document.getElementById('recipeModal').classList.remove('show');
+      document.getElementById('overlayBg').classList.remove('show');
+      modalRecipeKey = null;
+    }
+
+    function cookFromModal() {
+      if (!modalRecipeKey) return;
+      const key = modalRecipeKey;
+      closeRecipeModal();
+      startCooking(key);
+    }
+
+    /* ═══ UI RENDER ═══ */
+    function updateUI() {
+      // Ingredients
+      if (fridgeClosed) {
+        document.getElementById('ingredientsTray').innerHTML =
+          `<div style="grid-column:1/-1;text-align:center;padding:28px 0;color:#0c2e47;">
+            <div style="font-size:48px;margin-bottom:10px">🧊</div>
+            <div style="font-size:11px;letter-spacing:3px;color:#164e63;font-weight:bold">FRIDGE IS CLOSED</div>
+            <div style="font-size:10px;color:#0c2233;margin-top:6px;letter-spacing:1px">Cook a dish to open it again</div>
+          </div>`;
+      } else {
+        const tray = (game.trayIngredients && game.trayIngredients.length) ? game.trayIngredients : ALL_INGREDIENTS;
+        document.getElementById('ingredientsTray').innerHTML = tray.map(ing => {
+          const emoji = INGREDIENT_EMOJI[ing] || '🥄';
+          const short = ing.length > 8 ? ing.slice(0,7)+'.' : ing;
+          return `<button class="ingredient-btn" onclick="pickIngredient('${ing}',this)" title="${ing}">
+            <span class="ing-emoji">${emoji}</span><span class="ing-name">${short}</span>
+          </button>`;
+        }).join('');
+      }
+
+      // Crafting
+      document.getElementById('craftingOptions').innerHTML = Object.entries(CRAFTING_RECIPES).map(([key,c]) =>
+        `<button class="craft-btn ${game.selectedCraft.includes(key)?'selected':''}" onclick="toggleCraft('${key}')">${c.emoji} ${c.name}<br><span style="font-size:9px;opacity:.6">${c.needs.join('+')}</span></button>`
+      ).join('');
+
+      // Inventory
+      document.getElementById('inventory').innerHTML = game.inventory.length === 0
+        ? '<span class="inv-empty">EMPTY — pick ingredients above</span>'
+        : game.inventory.map(inv =>
+            `<span class="inventory-item ${inv.crafted?'crafted':''}">${INGREDIENT_EMOJI[inv.name]||'🥄'} ${inv.name}</span>`
+          ).join('');
+
+      // Equipment
+      document.getElementById('equipmentList').innerHTML = game.equipment.map(e =>
+        `<div class="equip-item">${EQUIPMENT_EMOJI[e]||'🍳'} <strong>${e}</strong></div>`
+      ).join('');
+
+      // Judges
+      document.getElementById('judgesPanel').innerHTML = JUDGES.map(j =>
+        `<div class="judge-item">
+          <span class="judge-avatar">${JUDGE_AVATAR[j.name]}</span>
+          <div class="judge-info"><div class="judge-name-text">${j.name}</div><div class="judge-specialty">${j.specialty}</div></div>
+          <span>${game.judgeRatings[j.name] ? '⭐'.repeat(game.judgeRatings[j.name]) : '—'}</span>
+        </div>`
+      ).join('');
+
+      // Recipes
+      document.getElementById('recipesGrid').innerHTML = Object.entries(RECIPES).map(([key,r]) => {
+        if (!r.unlocked) return '';
+        const hasAll  = r.ingr.every(ing => game.inventory.some(inv => inv.name === ing));
+        const hasEquip = game.equipment.includes(r.equip);
+        const ready = hasAll && hasEquip && !game.cooking;
+        return `<div class="recipe-card" onclick="showRecipeDetail('${key}')">
+          <div class="recipe-emoji-big">${RECIPE_EMOJI[key]||'🍽️'}</div>
+          <div class="recipe-info">
+            <div class="recipe-name">${r.name}</div>
+            <div class="recipe-meta">${EQUIPMENT_EMOJI[r.equip]||'🍳'} ${r.equip} · ${'⭐'.repeat(r.diff)}</div>
+            ${ready?'<span class="recipe-ready-badge">✓ READY</span>':''}
+          </div>
+        </div>`;
+      }).join('');
+
+      // Stats
+      document.getElementById('stageDisplay').textContent = game.stage;
+      const tier = getStageTier(game.stage);
+      const tierEl = document.getElementById('tierLabel');
+      tierEl.textContent = tier.label;
+      tierEl.style.color = tier.color;
+      document.getElementById('scoreDisplay').textContent = Math.round(game.score);
+      document.getElementById('recipesUnlockedDisplay').textContent =
+        Object.values(RECIPES).filter(r=>r.unlocked).length + '/' + Object.keys(RECIPES).length;
+    }
+
+    /* ═══ RECIPE BOOK ═══ */
+    function openRecipeBook(newKey) {
+      const unlocked = Object.entries(RECIPES).filter(([, r]) => r.unlocked);
+      document.getElementById('rbSub').textContent =
+        `STAGE ${game.stage} — ${unlocked.length} RECIPE${unlocked.length !== 1 ? 'S' : ''} UNLOCKED`;
+
+      const banner = document.getElementById('rbNewBanner');
+      if (newKey && RECIPES[newKey]) {
+        banner.textContent = `✨ NEW RECIPE UNLOCKED: ${RECIPES[newKey].name.toUpperCase()}!`;
+        banner.classList.remove('hidden');
+      } else {
+        banner.classList.add('hidden');
+      }
+
+      // Equipment strip
+      document.getElementById('rbKitchen').innerHTML =
+        '<span class="rb-kitchen-label">YOUR KITCHEN:</span>' +
+        game.equipment.map(e =>
+          `<span class="rb-equip-chip">${EQUIPMENT_EMOJI[e] || '🍳'} ${e}</span>`
+        ).join('');
+
+      document.getElementById('rbGrid').innerHTML = unlocked.map(([key, r]) => {
+        const emoji = RECIPE_EMOJI[key] || '🍽️';
+        const isNew = key === newKey;
+        const hasEquip = game.equipment.includes(r.equip);
+        return `<div class="rb-card ${isNew ? 'new-recipe' : ''}" onclick="openRbDetail('${key}')" title="Click to see ingredients">
+          ${isNew ? '<span class="rb-new-badge">✨ NEW</span>' : ''}
+          <div class="rb-card-emoji">${emoji}</div>
+          <div class="rb-card-name">${r.name}</div>
+          <div class="rb-card-diff">${'⭐'.repeat(r.diff)}${'☆'.repeat(Math.max(0,3-r.diff))}</div>
+          <div class="rb-card-ingr">${r.ingr.join(' · ')}</div>
+          <span class="rb-card-equip ${hasEquip ? 'has-it' : 'no-equip'}">${hasEquip ? '✓' : '✗'} ${r.equip}</span>
+        </div>`;
+      }).join('');
+
+      document.getElementById('recipeBookOverlay').classList.add('show');
+    }
+
+    function closeRecipeBook() {
+      document.getElementById('recipeBookOverlay').classList.remove('show');
+      openFridge();
+    }
+
+    function openRbDetail(key) {
+      const r = RECIPES[key];
+      const emoji = RECIPE_EMOJI[key] || '🍽️';
+      document.getElementById('rbDetailEmoji').textContent = emoji;
+      document.getElementById('rbDetailName').textContent = r.name;
+      document.getElementById('rbDetailDiff').textContent = '⭐'.repeat(r.diff) + '☆'.repeat(Math.max(0, 3 - r.diff)) + ' · ' + (r.diff === 1 ? 'Easy' : r.diff === 2 ? 'Medium' : 'Hard');
+      document.getElementById('rbDetailEquip').textContent = '🍳 ' + r.equip;
+      document.getElementById('rbDetailIngrs').innerHTML = r.ingr.map(ing =>
+        `<div class="rb-detail-ing">
+          <span class="rb-detail-ing-emoji">${INGREDIENT_EMOJI[ing] || '🥄'}</span>
+          <span>${ing}</span>
+        </div>`
+      ).join('');
+      document.getElementById('rbDetailSteps').innerHTML = r.actions.map((a, i) =>
+        `<div class="rb-detail-step">
+          <span class="rb-detail-stepnum">${i + 1}</span>
+          <span>${ACTION_EMOJI[a] || ''} ${a}</span>
+        </div>`
+      ).join('');
+      document.getElementById('rbDetailBg').classList.add('show');
+    }
+
+    function closeRbDetail(e) {
+      if (e && e.target !== document.getElementById('rbDetailBg')) return;
+      document.getElementById('rbDetailBg').classList.remove('show');
+    }
+
+    /* ═══ FRIDGE ═══ */
+    let fridgeInterval = null;
+    let fridgeClosed = false;
+    let fridgeTime = 20;
+    let fridgeCounts = {};
+    let fridgeTotalGrabbed = 0;
+
+    function openFridge() {
+      fridgeTime = 20;
+      fridgeCounts = {};
+      fridgeTotalGrabbed = 0;
+
+      const tray = (game.trayIngredients && game.trayIngredients.length) ? game.trayIngredients : ALL_INGREDIENTS;
+
+      document.getElementById('fridgeTrayInfo').textContent =
+        tray.length < ALL_INGREDIENTS.length
+          ? `${tray.length} OF ${ALL_INGREDIENTS.length} INGREDIENTS IN STOCK THIS STAGE`
+          : 'ALL INGREDIENTS IN STOCK — GRAB WHAT YOU NEED!';
+
+      document.getElementById('fridgeGrid').innerHTML = tray.map(ing => {
+        const emoji = INGREDIENT_EMOJI[ing] || '🥄';
+        const safeId = 'fb_' + ing.replace(/[^a-z0-9]/gi, '_');
+        return `<button class="fridge-ing-btn" id="${safeId}" onclick="fridgeGrab('${ing}')" title="${ing}">
+          <span class="fridge-ing-emoji">${emoji}</span>
+          <span class="fridge-ing-name">${ing}</span>
+        </button>`;
+      }).join('');
+
+      document.getElementById('fridgeGrabTotal').textContent = '0 items grabbed';
+
+      const timerEl = document.getElementById('fridgeTimer');
+      const barEl   = document.getElementById('fridgeBar');
+      timerEl.textContent = '20';
+      timerEl.style.color = '#38bdf8';
+      barEl.style.width = '100%';
+      barEl.style.background = '#38bdf8';
+
+      // Spawn drifting snowflakes
+      const overlay = document.getElementById('fridgeOverlay');
+      overlay.querySelectorAll('.fridge-flake').forEach(e => e.remove());
+      for (let i = 0; i < 10; i++) {
+        const f = document.createElement('span');
+        f.className = 'fridge-flake';
+        f.textContent = '❄';
+        f.style.fontSize  = (10 + Math.random() * 18) + 'px';
+        f.style.left = (Math.random() * 100) + '%';
+        f.style.animationDuration  = (7 + Math.random() * 9) + 's';
+        f.style.animationDelay     = (-Math.random() * 12) + 's';
+        overlay.appendChild(f);
+      }
+
+      fridgeClosed = false;
+      overlay.classList.add('show');
+
+      if (fridgeInterval) clearInterval(fridgeInterval);
+      fridgeInterval = setInterval(() => {
+        fridgeTime--;
+        const pct = (fridgeTime / 20) * 100;
+        const color = fridgeTime > 5 ? '#38bdf8' : fridgeTime > 2 ? '#facc15' : '#f87171';
+        timerEl.textContent  = fridgeTime;
+        timerEl.style.color  = color;
+        barEl.style.width    = pct + '%';
+        barEl.style.background = color;
+        if (fridgeTime <= 0) closeFridge();
+      }, 1000);
+    }
+
+    function fridgeGrab(ing) {
+      game.inventory.push({ name: ing, crafted: false });
+      fridgeCounts[ing] = (fridgeCounts[ing] || 0) + 1;
+      fridgeTotalGrabbed++;
+
+      const safeId = 'fb_' + ing.replace(/[^a-z0-9]/gi, '_');
+      const btn = document.getElementById(safeId);
+      if (btn) {
+        let badge = btn.querySelector('.fridge-ing-count');
+        if (!badge) {
+          badge = document.createElement('span');
+          badge.className = 'fridge-ing-count';
+          btn.appendChild(badge);
+        }
+        badge.textContent = 'x' + fridgeCounts[ing];
+        btn.classList.remove('grabbed');
+        void btn.offsetWidth; // restart animation
+        btn.classList.add('grabbed');
+      }
+
+      document.getElementById('fridgeGrabTotal').textContent =
+        fridgeTotalGrabbed + ' item' + (fridgeTotalGrabbed !== 1 ? 's' : '') + ' grabbed';
+    }
+
+    function closeFridge() {
+      if (fridgeInterval) { clearInterval(fridgeInterval); fridgeInterval = null; }
+      fridgeClosed = true;
+      const overlay = document.getElementById('fridgeOverlay');
+      overlay.style.transition = 'opacity .35s';
+      overlay.style.opacity = '0';
+      setTimeout(() => {
+        overlay.classList.remove('show');
+        overlay.style.opacity = '';
+        overlay.style.transition = '';
+      }, 360);
+      updateUI();
+    }
+
+    /* ═══ SETTINGS STATE ═══ */
+    const settings = { musicOn: true, volume: 0.65, speed: 'normal', showTips: true };
+    const SPEED_MULT = { relaxed: 1.6, normal: 1.0, hard: 0.65 };
+
+    function settingToggleMusic() {
+      settings.musicOn = !settings.musicOn;
+      const pill = document.getElementById('musicTogglePill');
+      pill.className = 'toggle-pill ' + (settings.musicOn ? 'on' : 'off');
+      // sync music button too
+      musicMuted = !settings.musicOn;
+      const btn = document.getElementById('musicBtn');
+      if (musicMuted) {
+        btn.textContent = '🔇'; btn.classList.add('muted');
+        if (musicTimeout) { clearTimeout(musicTimeout); musicTimeout = null; }
+        if (audioCtx) audioCtx.suspend();
+      } else {
+        btn.textContent = '🎵'; btn.classList.remove('muted');
+        startMusic();
+      }
+    }
+
+    function settingVolume(val) {
+      settings.volume = val / 10;
+      if (masterGain) masterGain.gain.value = settings.volume;
+    }
+
+    function setSpeed(speed) {
+      settings.speed = speed;
+      document.querySelectorAll('.seg-opt').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+    }
+
+    function settingToggleTips() {
+      settings.showTips = !settings.showTips;
+      const pill = document.getElementById('tipsTogglePill');
+      pill.className = 'toggle-pill ' + (settings.showTips ? 'on' : 'off');
+    }
+
+    /* ═══ MENU / MODAL CONTROL ═══ */
+    function openSettings()   { document.getElementById('settingsShell').classList.add('show'); }
+    function closeSettings()  { document.getElementById('settingsShell').classList.remove('show'); }
+    function openHowToPlay()  { document.getElementById('htpShell').classList.add('show'); }
+    function closeHowToPlay() { document.getElementById('htpShell').classList.remove('show'); }
+
+    function toggleGameMenu() {
+      document.getElementById('gameMenuPanel').classList.toggle('show');
+    }
+    function closeGameMenu() {
+      document.getElementById('gameMenuPanel').classList.remove('show');
+    }
+    // Close game menu when clicking outside
+    document.addEventListener('click', e => {
+      const panel = document.getElementById('gameMenuPanel');
+      if (!panel) return;
+      if (!panel.contains(e.target) && e.target.id !== 'ingameGear') closeGameMenu();
+    });
+
+    /* ═══ START SCREEN ═══ */
+    function spawnParticles() {
+      const foods = ['🍔','🌮','🍕','🥗','🍣','🥞','🍜','🍛','🥩','🍰','🦆','🥘'];
+      const screen = document.getElementById('startScreen');
+      foods.forEach((f, i) => {
+        const el = document.createElement('span');
+        el.className = 'start-particle';
+        el.textContent = f;
+        el.style.fontSize = (22 + Math.random() * 20) + 'px';
+        el.style.left = (Math.random() * 100) + '%';
+        el.style.animationDuration = (12 + Math.random() * 14) + 's';
+        el.style.animationDelay = (Math.random() * -20) + 's';
+        screen.appendChild(el);
+      });
+    }
+
+    function clickStartGame() {
+      const s = document.getElementById('startScreen');
+      s.classList.add('hiding');
+      setTimeout(() => {
+        s.style.display = 'none';
+        document.getElementById('ingameGear').classList.add('visible');
+        openRecipeBook(null);
+      }, 500);
+      startMusic();
+    }
+
+    function returnToMenu() {
+      document.getElementById('startScreen').style.display = '';
+      document.getElementById('startScreen').classList.remove('hiding');
+      document.getElementById('ingameGear').classList.remove('visible');
+      startNewGame();
+    }
+
+    /* ═══ AUTH ═══ */
+    let authMode = 'login';
+    let currentUser = null;
+
+    function authSwitchTab(mode) {
+      authMode = mode;
+      document.getElementById('authTabLogin').classList.toggle('active', mode === 'login');
+      document.getElementById('authTabRegister').classList.toggle('active', mode === 'register');
+      document.getElementById('authSubmitBtn').textContent = mode === 'login' ? 'LOGIN' : 'CREATE ACCOUNT';
+      document.getElementById('authError').textContent = '';
+    }
+
+    async function authSubmit() {
+      const username = document.getElementById('authUsername').value.trim();
+      const password = document.getElementById('authPassword').value;
+      const errEl = document.getElementById('authError');
+      errEl.textContent = '';
+      if (!username || !password) { errEl.textContent = 'PLEASE FILL IN ALL FIELDS'; return; }
+
+      const btn = document.getElementById('authSubmitBtn');
+      const originalText = btn.textContent;
+      btn.textContent = '...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/' + authMode, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          currentUser = data.username;
+          document.getElementById('startWelcome').textContent = 'WELCOME BACK, ' + currentUser.toUpperCase() + '!';
+          const screen = document.getElementById('authScreen');
+          screen.classList.add('hiding');
+          setTimeout(() => { screen.style.display = 'none'; }, 450);
+        } else {
+          errEl.textContent = (data.error || 'ERROR').toUpperCase();
+        }
+      } catch {
+        errEl.textContent = 'CONNECTION ERROR — IS THE SERVER RUNNING?';
+      }
+      btn.textContent = originalText;
+      btn.disabled = false;
+    }
+
+    document.getElementById('authUsername').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('authPassword').focus();
+    });
+    document.getElementById('authPassword').addEventListener('keydown', e => {
+      if (e.key === 'Enter') authSubmit();
+    });
+
+    window.addEventListener('load', () => {
+      spawnParticles();
+      startNewGame();
+    });
+
+    /* ═══ MUSIC ═══ */
+    let audioCtx = null;
+    let masterGain = null;
+    let musicTimeout = null;
+    let musicMuted = false;
+    let musicBarNum = 0;
+
+    const BPM  = 126;
+    const BEAT = 60 / BPM;          // ~0.476s per beat
+    const BAR  = BEAT * 4;          // one bar = 4 beats
+
+    // Chord progression: C  Am  F  G  (bright cooking-show energy)
+    const CHORDS = [
+      { root: 261.6, notes: [261.6, 329.6, 392.0] },  // C major
+      { root: 220.0, notes: [220.0, 261.6, 329.6] },  // A minor
+      { root: 174.6, notes: [174.6, 220.0, 261.6] },  // F major
+      { root: 196.0, notes: [196.0, 246.9, 293.7] },  // G major
+    ];
+
+    // Pentatonic melody riff (C5 pentatonic: C D E G A)
+    const MELODY = [523.3,659.3,784.0,659.3,880.0,784.0,659.3,523.3];
+
+    function initAudio() {
+      if (audioCtx) return;
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      masterGain = audioCtx.createGain();
+      masterGain.gain.value = settings.volume;
+      masterGain.connect(audioCtx.destination);
+    }
+
+    function out() { return masterGain; }
+
+    /* ── Drum synthesis ── */
+    function kick(t) {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(180, t);
+      o.frequency.exponentialRampToValueAtTime(42, t + 0.22);
+      g.gain.setValueAtTime(1.0, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+      o.connect(g); g.connect(out());
+      o.start(t); o.stop(t + 0.32);
+    }
+
+    function snare(t) {
+      // Noise burst
+      const len = Math.floor(audioCtx.sampleRate * 0.18);
+      const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+      const s = audioCtx.createBufferSource(); s.buffer = buf;
+      const bp = audioCtx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1800; bp.Q.value = 0.8;
+      const g = audioCtx.createGain();
+      g.gain.setValueAtTime(0.45, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
+      s.connect(bp); bp.connect(g); g.connect(out()); s.start(t);
+      // Tone body
+      const o = audioCtx.createOscillator(), og = audioCtx.createGain();
+      o.frequency.value = 185;
+      og.gain.setValueAtTime(0.25, t); og.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
+      o.connect(og); og.connect(out()); o.start(t); o.stop(t + 0.12);
+    }
+
+    function hihat(t, open) {
+      const dur = open ? 0.09 : 0.032;
+      const len = Math.floor(audioCtx.sampleRate * dur);
+      const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+      const s = audioCtx.createBufferSource(); s.buffer = buf;
+      const hp = audioCtx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 9000;
+      const g = audioCtx.createGain();
+      g.gain.setValueAtTime(0.22, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      s.connect(hp); hp.connect(g); g.connect(out()); s.start(t);
+    }
+
+    /* ── Bass, chords, melody ── */
+    function bassNote(freq, t, dur) {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      const lp = audioCtx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 280;
+      o.type = 'sawtooth'; o.frequency.value = freq / 2;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.22, t + 0.02);
+      g.gain.setValueAtTime(0.18, t + dur - 0.04);
+      g.gain.linearRampToValueAtTime(0, t + dur);
+      o.connect(lp); lp.connect(g); g.connect(out());
+      o.start(t); o.stop(t + dur + 0.05);
+    }
+
+    function chordStab(freqs, t, dur) {
+      freqs.forEach((freq, i) => {
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        const lp = audioCtx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1800;
+        o.type = i === 0 ? 'sawtooth' : 'square';
+        o.frequency.value = freq; o.detune.value = i * 5;
+        const vol = 0.055 - i * 0.012;
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(vol, t + 0.015);
+        g.gain.setValueAtTime(vol * 0.6, t + dur * 0.4);
+        g.gain.linearRampToValueAtTime(0, t + dur);
+        o.connect(lp); lp.connect(g); g.connect(out());
+        o.start(t); o.stop(t + dur + 0.05);
+      });
+    }
+
+    function melodyNote(freq, t, dur) {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = 'square'; o.frequency.value = freq;
+      const lp = audioCtx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2400;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.07, t + 0.01);
+      g.gain.setValueAtTime(0.055, t + dur - 0.04);
+      g.gain.linearRampToValueAtTime(0, t + dur);
+      o.connect(lp); lp.connect(g); g.connect(out());
+      o.start(t); o.stop(t + dur + 0.04);
+    }
+
+    /* ── Bar scheduler ── */
+    function scheduleBar(t, barNum) {
+      const b = BEAT;
+      const chord = CHORDS[barNum % CHORDS.length];
+
+      // Drums: kick 1&3, snare 2&4, 8th hats
+      kick(t);            hihat(t, false);
+      hihat(t + b*0.5, false);
+      snare(t + b);       hihat(t + b, false);
+      hihat(t + b*1.5, false);
+      kick(t + b*2);      hihat(t + b*2, true);
+      hihat(t + b*2.5, false);
+      snare(t + b*3);     hihat(t + b*3, false);
+      hihat(t + b*3.5, false);
+
+      // Chord stab: beat 1, quick stab on beat 3
+      chordStab(chord.notes, t, b * 1.8);
+      chordStab(chord.notes, t + b * 2, b * 0.7);
+
+      // Bass: root on 1 & 3, fifth on 2 & 4
+      bassNote(chord.root, t,         b * 0.85);
+      bassNote(chord.notes[1] || chord.root, t + b,     b * 0.85);
+      bassNote(chord.root, t + b * 2, b * 0.85);
+      bassNote(chord.notes[1] || chord.root, t + b * 3, b * 0.85);
+
+      // Melody riff: 8 notes per bar, plays every other bar
+      if (barNum % 2 === 0) {
+        MELODY.forEach((freq, i) => melodyNote(freq, t + i * b * 0.5, b * 0.44));
+      }
+    }
+
+    function scheduleNextBar() {
+      if (musicMuted || !audioCtx) return;
+      const t = audioCtx.currentTime + 0.05;
+      scheduleBar(t, musicBarNum++);
+      musicTimeout = setTimeout(scheduleNextBar, BAR * 1000 - 60);
+    }
+
+    function startMusic() {
+      if (musicMuted) return;
+      initAudio();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      if (musicTimeout) return;
+      musicBarNum = 0;
+      scheduleNextBar();
+    }
+
+    function toggleMusic() {
+      musicMuted = !musicMuted;
+      const btn = document.getElementById('musicBtn');
+      if (musicMuted) {
+        btn.textContent = '🔇';
+        btn.classList.add('muted');
+        if (musicTimeout) { clearTimeout(musicTimeout); musicTimeout = null; }
+        if (audioCtx) audioCtx.suspend();
+      } else {
+        btn.textContent = '🎵';
+        btn.classList.remove('muted');
+        startMusic();
+      }
+    }
+
+    // Start music on first user interaction (browser autoplay policy)
+    document.addEventListener('click', function onFirstClick() {
+      startMusic();
+      document.removeEventListener('click', onFirstClick);
+    });
+  </script>
 </body>
 </html>

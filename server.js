@@ -3,6 +3,8 @@ const http = require('http');
 const socketIo = require('socket.io');
 const cors = require('cors');
 const path = require('path');
+const crypto = require('crypto');
+const Database = require('better-sqlite3');
 
 const app = express();
 const server = http.createServer(app);
@@ -14,6 +16,41 @@ const io = socketIo(server, {
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
+/* ── AUTH (SQLite) ── */
+const db = new Database(path.join(__dirname, 'game.db'));
+db.exec(`CREATE TABLE IF NOT EXISTS users (
+  username_lower TEXT PRIMARY KEY,
+  display_name   TEXT NOT NULL,
+  password_hash  TEXT NOT NULL,
+  created_at     TEXT NOT NULL
+)`);
+
+function hashPw(password, username) {
+  return crypto.createHash('sha256').update(password + ':' + username.toLowerCase()).digest('hex');
+}
+
+app.post('/api/register', (req, res) => {
+  const { username, password } = req.body || {};
+  if (!username || !password) return res.json({ ok: false, error: 'Username and password required' });
+  if (username.length < 3 || username.length > 20) return res.json({ ok: false, error: 'Username must be 3–20 characters' });
+  if (!/^[a-zA-Z0-9_]+$/.test(username)) return res.json({ ok: false, error: 'Letters, numbers, and underscores only' });
+  if (password.length < 4) return res.json({ ok: false, error: 'Password must be at least 4 characters' });
+  const exists = db.prepare('SELECT 1 FROM users WHERE username_lower = ?').get(username.toLowerCase());
+  if (exists) return res.json({ ok: false, error: 'Username already taken' });
+  db.prepare('INSERT INTO users VALUES (?, ?, ?, ?)').run(
+    username.toLowerCase(), username, hashPw(password, username), new Date().toISOString()
+  );
+  res.json({ ok: true, username });
+});
+
+app.post('/api/login', (req, res) => {
+  const { username, password } = req.body || {};
+  if (!username || !password) return res.json({ ok: false, error: 'Username and password required' });
+  const user = db.prepare('SELECT * FROM users WHERE username_lower = ?').get(username.toLowerCase());
+  if (!user || user.password_hash !== hashPw(password, username)) return res.json({ ok: false, error: 'Invalid username or password' });
+  res.json({ ok: true, username: user.display_name });
+});
 
 const RECIPES = {
   carbonara: { name: 'Pasta Carbonara', ingredients: ['Eggs', 'Pasta', 'Bacon', 'Cheese'], difficulty: 2, failChance: 0.2 },
