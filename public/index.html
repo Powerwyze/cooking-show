@@ -659,42 +659,42 @@
 
       <div class="htp-section">
         <div class="htp-section-label">THE BASICS</div>
-        <div class="htp-card"><div class="htp-icon">🌾</div><div><strong>Collect Ingredients</strong><p>Click any ingredient in the grid to add it to your inventory. You need to collect all the required ingredients for a recipe before you can cook it.</p></div></div>
-        <div class="htp-card"><div class="htp-icon">⚗️</div><div><strong>Craft Special Items</strong><p>Some recipes require crafted ingredients like Pasta or Dough. Select a crafting recipe in the Craft Station — it'll consume two base ingredients from your inventory and produce the crafted item.</p></div></div>
-        <div class="htp-card"><div class="htp-icon">📖</div><div><strong>Pick a Recipe</strong><p>Click any recipe card to see what it needs. If you have all the ingredients AND the required equipment in your kitchen, the <strong style="color:#4ade80">✓ READY</strong> badge lights up and you can cook it.</p></div></div>
-        <div class="htp-card"><div class="htp-icon">🍳</div><div><strong>Equipment Matters</strong><p>Each recipe requires a specific piece of kitchen equipment (Pan, Oven, Wok…). You start with 3 random tools. When you advance a stage, your equipment is refreshed — so plan ahead!</p></div></div>
+        <div class="htp-card"><div class="htp-icon">🌾</div><div><strong>Collect Ingredients</strong><p>Grab what recipes need.</p></div></div>
+        <div class="htp-card"><div class="htp-icon">⚗️</div><div><strong>Craft Special Items</strong><p>Use two ingredients to make items like Pasta or Dough.</p></div></div>
+        <div class="htp-card"><div class="htp-icon">📖</div><div><strong>Pick a Recipe</strong><p>Cook when you have the ingredients and equipment.</p></div></div>
+        <div class="htp-card"><div class="htp-icon">🍳</div><div><strong>Equipment Matters</strong><p>Each dish needs the right tool. New stages refresh tools.</p></div></div>
       </div>
 
       <div class="htp-section">
         <div class="htp-section-label">COOKING MINI-GAMES</div>
-        <p style="color:#475569;font-size:11px;margin-bottom:12px">Each cooking step triggers one of three mini-games. You have a countdown timer per step — fail and your ingredients are lost!</p>
+        <p style="color:#475569;font-size:11px;margin-bottom:12px">Beat each mini-game before time runs out.</p>
         <div class="htp-card">
           <div class="htp-icon">🔪</div>
           <div>
             <strong><span class="mg-badge mg-mash">MASH</span> Rapid Clicking</strong>
-            <p>A big emoji target appears. Click it as fast as you can the required number of times before time runs out. Harder recipes need more clicks. Actions: Chop, Beat, Whip, Form, Drain, Garnish.</p>
+            <p>Click the target enough times.</p>
           </div>
         </div>
         <div class="htp-card">
           <div class="htp-icon">🎯</div>
           <div>
             <strong><span class="mg-badge mg-timing">TIMING</span> Hit the Zone</strong>
-            <p>A ball bounces back and forth on a track. Press TAP when it's inside the green zone. Miss = time penalty. The zone gets narrower on harder recipes. Actions: Flip, Sear, Bake, Slice, Caramelize, Toast, Rest, Fold, Finish.</p>
+            <p>Tap when the ball reaches green.</p>
           </div>
         </div>
         <div class="htp-card">
           <div class="htp-icon">🌡️</div>
           <div>
             <strong><span class="mg-badge mg-hold">HOLD</span> Temperature Control</strong>
-            <p>Hold the button to raise a temperature gauge. Release to let it fall. Keep it in the green zone for 2 continuous seconds to succeed. Everything else uses this: Heat, Simmer, Stir, Season, Fry, Cook, and more.</p>
+            <p>Hold and release to stay in green.</p>
           </div>
         </div>
       </div>
 
       <div class="htp-section">
         <div class="htp-section-label">SCORING &amp; PROGRESSION</div>
-        <div class="htp-card"><div class="htp-icon">⭐</div><div><strong>Judge Ratings</strong><p>Three judges rate your dish 1–5 stars. Each judge has a specialty — Gordon loves French cuisine, Martha prefers American classics, Bobby is all about street food. Match their tastes for higher scores.</p></div></div>
-        <div class="htp-card"><div class="htp-icon">🏆</div><div><strong>Stage Progression</strong><p>Finishing any recipe advances you to the next stage. Each stage unlocks one brand-new recipe and refreshes your kitchen equipment. There are 35 recipes to unlock total — can you master them all?</p></div></div>
+        <div class="htp-card"><div class="htp-icon">⭐</div><div><strong>Judge Ratings</strong><p>Better dishes earn more stars and points.</p></div></div>
+        <div class="htp-card"><div class="htp-icon">🏆</div><div><strong>Stage Progression</strong><p>Finish dishes to unlock recipes and new tools.</p></div></div>
       </div>
 
       <button class="start-btn primary" style="width:100%;margin-top:4px" onclick="closeHowToPlay()">GOT IT — LET'S COOK! 🍳</button>
@@ -834,7 +834,7 @@
 
       <!-- HOLD GAME: hold button to keep temperature in the green zone -->
       <div class="mini-game hidden" id="holdGame">
-        <div class="challenge-instruction">Hold the button to heat up — keep the bar in the 🟢 zone for 2 seconds!</div>
+        <div class="challenge-instruction">Stay in green for 2 seconds.</div>
         <div class="hold-game-inner">
           <div class="gauge-track">
             <div class="gauge-green-zone" id="gaugeGreen"></div>
@@ -1218,7 +1218,7 @@
         green.style.width = (chal.greenMax - chal.greenMin) + '%';
         document.getElementById('sliderBall').style.left = '10%';
         document.getElementById('sliderBall').className = 'slider-ball';
-        const tTip = settings.showTips ? `Tap when the ● hits the 🟢 zone! (zone width shrinks at higher difficulty)` : '';
+        const tTip = settings.showTips ? 'Tap in the green zone.' : '';
         document.getElementById('timingInstruct').textContent = tTip;
       }
 
@@ -1227,7 +1227,7 @@
         document.getElementById('mashEmoji').textContent = emojiMap[action] || '👆';
         document.getElementById('mashCount').textContent = `0/${chal.clicksNeeded}`;
         document.getElementById('mashFill').style.width = '0%';
-        document.getElementById('mashInstruct').textContent = settings.showTips ? `${action} it ${chal.clicksNeeded} times!` : '';
+        document.getElementById('mashInstruct').textContent = settings.showTips ? `${chal.clicksNeeded} clicks.` : '';
       }
 
       if (type === 'hold') {
