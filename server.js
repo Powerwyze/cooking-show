@@ -15,6 +15,7 @@ const io = socketIo(server, {
 
 app.use(cors());
 app.use(express.json());
+app.get('/healthz', (req, res) => res.status(200).json({ ok: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 /* ── AUTH (SQLite) ── */
