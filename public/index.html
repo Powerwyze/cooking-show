@@ -1900,10 +1900,10 @@
     function clickStartGame() {
       const s = document.getElementById('startScreen');
       s.classList.add('hiding');
+      document.getElementById('ingameGear').classList.add('visible');
+      openRecipeBook(null);
       setTimeout(() => {
         s.style.display = 'none';
-        document.getElementById('ingameGear').classList.add('visible');
-        openRecipeBook(null);
       }, 500);
       startMusic();
     }
