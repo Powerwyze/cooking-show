@@ -131,9 +131,21 @@
     }
     .cooking-overlay.show { display: flex; }
 
-    .cook-top { display: flex; justify-content: space-between; align-items: flex-start; width: 520px; max-width: 94vw; margin-bottom: 6px; }
+    .cook-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; width: 520px; max-width: 94vw; margin-bottom: 6px; }
+    .cook-top > div:first-child { flex: 1; min-width: 0; text-align: left; }
     .cook-recipe-label { font-size: 11px; letter-spacing: 3px; color: #475569; }
     .cook-recipe-name-big { font-size: 22px; font-weight: 900; color: #f1f5f9; margin-top: 2px; }
+    .cook-timer {
+      display: flex; flex-direction: column; align-items: flex-end; gap: 3px;
+      min-width: 92px; padding: 9px 12px; border-radius: 10px;
+      background: #0f172a; border: 1px solid #1e293b;
+    }
+    .cook-timer-label { font-size: 9px; letter-spacing: 2px; color: #475569; }
+    .cook-timer-value { font-size: 24px; font-weight: 900; color: #38bdf8; line-height: 1; }
+    .cook-timer.warning { border-color: #92400e; }
+    .cook-timer.warning .cook-timer-value { color: #facc15; }
+    .cook-timer.danger { border-color: #7f1d1d; box-shadow: 0 0 20px rgba(248,113,113,.25); }
+    .cook-timer.danger .cook-timer-value { color: #f87171; }
 
     /* Step progress dots */
     .steps-track { display: flex; gap: 8px; justify-content: center; margin: 10px 0 6px; }
@@ -387,10 +399,13 @@
     .rb-card-diff { font-size:11px;color:#78350f; }
     .rb-card-ingr { font-size:9px;color:#44290a;line-height:1.6; }
     .rb-card-equip { font-size:9px;background:#1f1506;border:1px solid #3d2609;border-radius:5px;padding:2px 7px;color:#b45309;display:inline-block;margin-top:2px; }
-    .rb-footer { display:flex;align-items:center;gap:16px; }
+    .rb-footer { display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center; }
     .rb-open-btn { padding:14px 44px;background:linear-gradient(135deg,#0a2e1a,#0d3d22);border:2px solid #16a34a;border-radius:12px;color:#4ade80;font-size:14px;font-weight:900;font-family:'Courier New',monospace;cursor:pointer;letter-spacing:2px;box-shadow:0 6px 0 #052e16;transition:all .15s; }
     .rb-open-btn:hover { transform:translateY(-3px);box-shadow:0 9px 0 #052e16,0 0 24px rgba(74,222,128,.3); }
     .rb-open-btn:active { transform:translateY(2px);box-shadow:0 3px 0 #052e16; }
+    .rb-new-game-btn { padding:14px 32px;background:#110c02;border:2px solid #3d2609;border-radius:12px;color:#d97706;font-size:14px;font-weight:900;font-family:'Courier New',monospace;cursor:pointer;letter-spacing:2px;box-shadow:0 6px 0 #070501;transition:all .15s; }
+    .rb-new-game-btn:hover { transform:translateY(-3px);border-color:#92400e;color:#f59e0b;box-shadow:0 9px 0 #070501,0 0 24px rgba(245,158,11,.2); }
+    .rb-new-game-btn:active { transform:translateY(2px);box-shadow:0 3px 0 #070501; }
     .rb-card { cursor:pointer; }
     .rb-card:hover { border-color:#92400e;background:#180f02; }
     /* equipment strip */
@@ -485,6 +500,7 @@
     <div class="rb-grid" id="rbGrid"></div>
     <div class="rb-footer">
       <button class="rb-open-btn" onclick="closeRecipeBook()">OPEN FRIDGE 🧊</button>
+      <button class="rb-new-game-btn" onclick="returnToMenu()">🔄 NEW GAME</button>
     </div>
   </div>
 
@@ -564,7 +580,7 @@
     <div class="gm-item" onclick="openSettings();closeGameMenu()">⚙️ &nbsp;SETTINGS</div>
     <div class="gm-item" onclick="openHowToPlay();closeGameMenu()">📖 &nbsp;HOW TO PLAY</div>
     <div class="gm-divider"></div>
-    <div class="gm-item" onclick="closeGameMenu();startNewGame()">🔄 &nbsp;NEW GAME</div>
+    <div class="gm-item" onclick="closeGameMenu();returnToMenu()">🔄 &nbsp;NEW GAME</div>
     <div class="gm-item danger" onclick="closeGameMenu();returnToMenu()">🏠 &nbsp;MAIN MENU</div>
   </div>
 
@@ -698,7 +714,7 @@
           <div class="panel-title">🍳 EQUIPMENT</div>
           <div id="equipmentList"></div>
         </div>
-        <button class="new-game-btn" onclick="startNewGame()">🔄 NEW GAME</button>
+        <button class="new-game-btn" onclick="returnToMenu()">🔄 NEW GAME</button>
       </div>
     </div>
   </div>
@@ -739,6 +755,10 @@
       <div>
         <div class="cook-recipe-label">NOW COOKING</div>
         <div class="cook-recipe-name-big" id="cookRecipeName">...</div>
+      </div>
+      <div class="cook-timer" id="cookTimer">
+        <div class="cook-timer-label">DISH TIMER</div>
+        <div class="cook-timer-value" id="cookTimerValue">0:00</div>
       </div>
       <div id="cookPanEmoji" style="font-size:52px">🍳</div>
     </div>
@@ -951,10 +971,12 @@
 
     // Challenge state (one step at a time)
     let chal = { interval:null, done:true };
+    let cookClock = { interval:null, duration:0, timeLeft:0 };
 
     /* ═══ INIT ═══ */
     function startNewGame() {
       if (chal.interval) clearInterval(chal.interval);
+      stopCookTimer();
       game = { stage:1, score:0, inventory:[], cooking:null, equipment:[], currentRecipe:null, judgeRatings:{Gordon:0,Martha:0,Bobby:0}, selectedCraft:[], trayIngredients:[] };
       unlockRecipesForStage(1);
       generateEquipment();
@@ -1055,8 +1077,50 @@
       document.getElementById('cookPanEmoji').textContent = RECIPE_EMOJI[recipeKey] || '🍳';
       document.getElementById('cookFoodEmoji').textContent = RECIPE_EMOJI[recipeKey] || '🍳';
 
+      startCookTimer(recipe);
       updateStepsTrack();
       startChallengeForAction(recipe.actions[0]);
+    }
+
+    function getCookDuration(recipe) {
+      const s = Math.min(game.stage - 1, 18);
+      const perStepTime = Math.max(5, 14 - recipe.diff * 2 - s * 0.3);
+      return Math.ceil((perStepTime * recipe.actions.length + 4) * SPEED_MULT[settings.speed]);
+    }
+
+    function formatCookTime(seconds) {
+      const safe = Math.max(0, Math.ceil(seconds));
+      const mins = Math.floor(safe / 60);
+      const secs = String(safe % 60).padStart(2, '0');
+      return `${mins}:${secs}`;
+    }
+
+    function updateCookTimerDisplay() {
+      const timer = document.getElementById('cookTimer');
+      const value = document.getElementById('cookTimerValue');
+      if (!timer || !value) return;
+      const pct = cookClock.duration ? cookClock.timeLeft / cookClock.duration : 1;
+      timer.classList.toggle('warning', pct <= 0.35 && pct > 0.18);
+      timer.classList.toggle('danger', pct <= 0.18);
+      value.textContent = formatCookTime(cookClock.timeLeft);
+    }
+
+    function startCookTimer(recipe) {
+      stopCookTimer();
+      cookClock.duration = getCookDuration(recipe);
+      cookClock.timeLeft = cookClock.duration;
+      updateCookTimerDisplay();
+      cookClock.interval = setInterval(() => {
+        if (!game.cooking) { stopCookTimer(); return; }
+        cookClock.timeLeft -= 0.25;
+        updateCookTimerDisplay();
+        if (cookClock.timeLeft <= 0) failCooking('TIME UP!');
+      }, 250);
+    }
+
+    function stopCookTimer() {
+      if (cookClock.interval) clearInterval(cookClock.interval);
+      cookClock.interval = null;
     }
 
     /* ═══ STEP PROGRESS ═══ */
@@ -1278,6 +1342,7 @@
       game.actionIndex++;
 
       setTimeout(() => {
+        if (!game.cooking) return;
         box.style.borderColor = '#1e293b';
         box.style.boxShadow = '';
         if (game.actionIndex >= game.cooking.actions.length) {
@@ -1292,15 +1357,22 @@
     /* ── FAIL ── */
     function failChallenge() {
       if (chal.done) return;
-      chal.done = true;
-      clearInterval(chal.interval);
+      failCooking('STEP FAILED!');
+    }
 
+    function failCooking(message = 'DISH FAILED!') {
+      if (!game.cooking) return;
+      chal.done = true;
+      if (chal.interval) clearInterval(chal.interval);
+      stopCookTimer();
+      document.getElementById('challengeLabel').textContent = message;
       // Red flash
       const box = document.getElementById('challengeBox');
       box.style.borderColor = '#f87171';
       box.style.boxShadow = '0 0 30px rgba(248,113,113,.4)';
 
       setTimeout(() => {
+        if (!game.cooking) return;
         document.getElementById('cookingGame').classList.remove('show');
         const recipe = game.cooking;
         game.inventory = game.inventory.filter(inv => !recipe.ingr.includes(inv.name));
@@ -1312,6 +1384,7 @@
 
     /* ── END COOKING ── */
     function endCooking() {
+      stopCookTimer();
       document.getElementById('cookingGame').classList.remove('show');
       game.inventory = game.inventory.filter(inv => !game.cooking.ingr.includes(inv.name));
       showDishReveal(game.cooking, () => showJudgeRating(game.cooking));
@@ -1597,14 +1670,15 @@
     }
 
     /* ═══ FRIDGE ═══ */
+    const FRIDGE_DURATION = 15;
     let fridgeInterval = null;
     let fridgeClosed = false;
-    let fridgeTime = 20;
+    let fridgeTime = FRIDGE_DURATION;
     let fridgeCounts = {};
     let fridgeTotalGrabbed = 0;
 
     function openFridge() {
-      fridgeTime = 20;
+      fridgeTime = FRIDGE_DURATION;
       fridgeCounts = {};
       fridgeTotalGrabbed = 0;
 
@@ -1628,7 +1702,7 @@
 
       const timerEl = document.getElementById('fridgeTimer');
       const barEl   = document.getElementById('fridgeBar');
-      timerEl.textContent = '20';
+      timerEl.textContent = FRIDGE_DURATION;
       timerEl.style.color = '#38bdf8';
       barEl.style.width = '100%';
       barEl.style.background = '#38bdf8';
@@ -1653,7 +1727,7 @@
       if (fridgeInterval) clearInterval(fridgeInterval);
       fridgeInterval = setInterval(() => {
         fridgeTime--;
-        const pct = (fridgeTime / 20) * 100;
+        const pct = (fridgeTime / FRIDGE_DURATION) * 100;
         const color = fridgeTime > 5 ? '#38bdf8' : fridgeTime > 2 ? '#facc15' : '#f87171';
         timerEl.textContent  = fridgeTime;
         timerEl.style.color  = color;
@@ -1786,6 +1860,27 @@
     }
 
     function returnToMenu() {
+      if (chal.interval) clearInterval(chal.interval);
+      if (fridgeInterval) { clearInterval(fridgeInterval); fridgeInterval = null; }
+      stopCookTimer();
+      chal = { interval:null, done:true };
+      game.cooking = null;
+      game.currentRecipe = null;
+
+      document.getElementById('settingsShell').classList.remove('show');
+      document.getElementById('htpShell').classList.remove('show');
+      document.getElementById('gameMenuPanel').classList.remove('show');
+      document.getElementById('overlayBg').classList.remove('show');
+      document.getElementById('recipeModal').classList.remove('show');
+      document.getElementById('recipeBookOverlay').classList.remove('show');
+      document.getElementById('rbDetailBg').classList.remove('show');
+      document.getElementById('cookingGame').classList.remove('show');
+      document.getElementById('judgeOverlay').classList.remove('show');
+      document.getElementById('judgeScreen').classList.remove('show');
+      document.getElementById('fridgeOverlay').classList.remove('show');
+      document.getElementById('dishReveal').classList.remove('show');
+      document.getElementById('confettiWrap').innerHTML = '';
+
       document.getElementById('startScreen').style.display = '';
       document.getElementById('startScreen').classList.remove('hiding');
       document.getElementById('ingameGear').classList.remove('visible');
