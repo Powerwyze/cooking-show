@@ -1900,6 +1900,12 @@
     function clickStartGame() {
       const s = document.getElementById('startScreen');
       s.classList.add('hiding');
+      if (fridgeInterval) { clearInterval(fridgeInterval); fridgeInterval = null; }
+      fridgeClosed = false;
+      const fridgeOverlay = document.getElementById('fridgeOverlay');
+      fridgeOverlay.classList.remove('show');
+      fridgeOverlay.style.opacity = '';
+      fridgeOverlay.style.transition = '';
       document.getElementById('ingameGear').classList.add('visible');
       openRecipeBook(null);
       setTimeout(() => {
