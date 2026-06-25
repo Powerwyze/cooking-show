@@ -1823,6 +1823,14 @@
         fridgeTotalGrabbed + ' item' + (fridgeTotalGrabbed !== 1 ? 's' : '') + ' grabbed';
     }
 
+    function canCookAnyRecipe() {
+      return Object.values(RECIPES).some(recipe =>
+        recipe.unlocked &&
+        recipe.ingr.every(ing => game.inventory.some(inv => inv.name === ing)) &&
+        game.equipment.includes(recipe.equip)
+      );
+    }
+
     function closeFridge() {
       if (fridgeInterval) { clearInterval(fridgeInterval); fridgeInterval = null; }
       fridgeClosed = true;
@@ -1833,6 +1841,10 @@
         overlay.classList.remove('show');
         overlay.style.opacity = '';
         overlay.style.transition = '';
+        if (!canCookAnyRecipe()) {
+          openRecipeBook(null);
+          showRecipeBookStatus('YOU FAIL TO FIND ALL THE INGREDIENTS', 5000);
+        }
       }, 360);
       updateUI();
     }
