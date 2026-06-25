@@ -1373,7 +1373,14 @@
 
       setTimeout(() => {
         if (!game.cooking) return;
-        returnToMenu();
+        const recipe = game.cooking;
+        document.getElementById('cookingGame').classList.remove('show');
+        game.inventory = game.inventory.filter(inv => !recipe.ingr.includes(inv.name));
+        game.cooking = null;
+        game.currentRecipe = null;
+        updateUI();
+        openRecipeBook(null);
+        showRecipeBookStatus('FAILED TO MAKE YOUR DISH', 5000);
       }, 700);
     }
 
@@ -1635,6 +1642,15 @@
     function closeRecipeBook() {
       document.getElementById('recipeBookOverlay').classList.remove('show');
       openFridge();
+    }
+
+    function showRecipeBookStatus(message, duration = 5000) {
+      const banner = document.getElementById('rbNewBanner');
+      banner.textContent = message;
+      banner.classList.remove('hidden');
+      setTimeout(() => {
+        if (banner.textContent === message) banner.classList.add('hidden');
+      }, duration);
     }
 
     function openRbDetail(key) {
