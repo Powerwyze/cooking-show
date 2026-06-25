@@ -635,9 +635,9 @@
       <div class="setting-row">
         <div><div class="setting-lbl">⏱️ Cooking Speed</div><div class="setting-sub">Time allowed per cooking step</div></div>
         <div class="seg-group" id="speedSeg">
-          <button class="seg-opt" onclick="setSpeed('relaxed')">😌 EASY</button>
-          <button class="seg-opt active" onclick="setSpeed('normal')">👨‍🍳 NORMAL</button>
-          <button class="seg-opt" onclick="setSpeed('hard')">🔥 HARD</button>
+          <button class="seg-opt" onclick="setSpeed('relaxed', this)">😌 EASY</button>
+          <button class="seg-opt active" onclick="setSpeed('normal', this)">👨‍🍳 NORMAL</button>
+          <button class="seg-opt" onclick="setSpeed('hard', this)">🔥 HARD</button>
         </div>
       </div>
 
@@ -1005,7 +1005,9 @@
     /* ═══ INIT ═══ */
     function startNewGame() {
       if (chal.interval) clearInterval(chal.interval);
+      if (fridgeInterval) { clearInterval(fridgeInterval); fridgeInterval = null; }
       stopCookTimer();
+      fridgeClosed = false;
       game = { stage:1, score:0, inventory:[], cooking:null, equipment:[], currentRecipe:null, judgeRatings:{Gordon:0,Martha:0,Bobby:0}, selectedCraft:[], trayIngredients:[] };
       unlockRecipesForStage(1);
       generateEquipment();
@@ -1068,15 +1070,20 @@
 
     /* ═══ CRAFTING ═══ */
     function toggleCraft(key) {
-      const idx = game.selectedCraft.indexOf(key);
-      if (idx > -1) game.selectedCraft.splice(idx,1);
-      else { game.selectedCraft.push(key); if (game.selectedCraft.length === 2) doCraft(); }
-      updateUI();
+      game.selectedCraft = [key];
+      doCraft();
     }
     function doCraft() {
       const craft = CRAFTING_RECIPES[game.selectedCraft[0]];
       if (!craft) { game.selectedCraft = []; return; }
       const [a,b] = craft.needs;
+      const hasA = game.inventory.some(i => i.name === a);
+      const hasB = game.inventory.some(i => i.name === b);
+      if (!hasA || !hasB) {
+        game.selectedCraft = [];
+        updateUI();
+        return;
+      }
       let r1=false, r2=false;
       game.inventory = game.inventory.filter(i => {
         if (i.name===a && !r1) { r1=true; return false; }
@@ -1835,20 +1842,7 @@
     const SPEED_MULT = { relaxed: 1.6, normal: 1.0, hard: 0.65 };
 
     function settingToggleMusic() {
-      settings.musicOn = !settings.musicOn;
-      const pill = document.getElementById('musicTogglePill');
-      pill.className = 'toggle-pill ' + (settings.musicOn ? 'on' : 'off');
-      // sync music button too
-      musicMuted = !settings.musicOn;
-      const btn = document.getElementById('musicBtn');
-      if (musicMuted) {
-        btn.textContent = '🔇'; btn.classList.add('muted');
-        if (musicTimeout) { clearTimeout(musicTimeout); musicTimeout = null; }
-        if (audioCtx) audioCtx.suspend();
-      } else {
-        btn.textContent = '🎵'; btn.classList.remove('muted');
-        startMusic();
-      }
+      setMusicEnabled(!settings.musicOn);
     }
 
     function settingVolume(val) {
@@ -1856,10 +1850,10 @@
       if (masterGain) masterGain.gain.value = settings.volume;
     }
 
-    function setSpeed(speed) {
+    function setSpeed(speed, btn) {
       settings.speed = speed;
       document.querySelectorAll('.seg-opt').forEach(b => b.classList.remove('active'));
-      event.target.classList.add('active');
+      if (btn) btn.classList.add('active');
     }
 
     function settingToggleTips() {
@@ -2018,7 +2012,6 @@
     let audioCtx = null;
     let masterGain = null;
     let musicTimeout = null;
-    let musicMuted = false;
     let musicBarNum = 0;
 
     const BPM  = 126;
@@ -2162,34 +2155,40 @@
     }
 
     function scheduleNextBar() {
-      if (musicMuted || !audioCtx) return;
+      if (!settings.musicOn || !audioCtx) return;
       const t = audioCtx.currentTime + 0.05;
       scheduleBar(t, musicBarNum++);
       musicTimeout = setTimeout(scheduleNextBar, BAR * 1000 - 60);
     }
 
     function startMusic() {
-      if (musicMuted) return;
+      if (!settings.musicOn) return;
       initAudio();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
+      if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
       if (musicTimeout) return;
       musicBarNum = 0;
       scheduleNextBar();
     }
 
-    function toggleMusic() {
-      musicMuted = !musicMuted;
+    function setMusicEnabled(enabled) {
+      settings.musicOn = enabled;
+      const pill = document.getElementById('musicTogglePill');
       const btn = document.getElementById('musicBtn');
-      if (musicMuted) {
-        btn.textContent = '🔇';
-        btn.classList.add('muted');
+      if (pill) pill.className = 'toggle-pill ' + (enabled ? 'on' : 'off');
+      if (btn) {
+        btn.textContent = enabled ? '🎵' : '🔇';
+        btn.classList.toggle('muted', !enabled);
+      }
+      if (!enabled) {
         if (musicTimeout) { clearTimeout(musicTimeout); musicTimeout = null; }
-        if (audioCtx) audioCtx.suspend();
+        if (audioCtx && audioCtx.state !== 'closed') audioCtx.suspend().catch(() => {});
       } else {
-        btn.textContent = '🎵';
-        btn.classList.remove('muted');
         startMusic();
       }
+    }
+
+    function toggleMusic() {
+      setMusicEnabled(!settings.musicOn);
     }
 
     // Start music on first user interaction (browser autoplay policy)
