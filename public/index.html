@@ -2036,7 +2036,7 @@
     const MELODY = [523.3,659.3,784.0,659.3,880.0,784.0,659.3,523.3];
 
     function initAudio() {
-      if (audioCtx) return;
+      if (audioCtx && audioCtx.state !== 'closed') return;
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       masterGain = audioCtx.createGain();
       masterGain.gain.value = settings.volume;
@@ -2167,11 +2167,21 @@
       musicTimeout = setTimeout(scheduleNextBar, BAR * 1000 - 60);
     }
 
+    function stopMusic(resetAudio = false) {
+      if (musicTimeout) { clearTimeout(musicTimeout); musicTimeout = null; }
+      musicBarNum = 0;
+      if (resetAudio && audioCtx && audioCtx.state !== 'closed') {
+        audioCtx.close().catch(() => {});
+        audioCtx = null;
+        masterGain = null;
+      }
+    }
+
     function startMusic() {
       if (!settings.musicOn) return;
+      stopMusic(false);
       initAudio();
       if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
-      if (musicTimeout) return;
       musicBarNum = 0;
       scheduleNextBar();
     }
@@ -2186,8 +2196,7 @@
         btn.classList.toggle('muted', !enabled);
       }
       if (!enabled) {
-        if (musicTimeout) { clearTimeout(musicTimeout); musicTimeout = null; }
-        if (audioCtx && audioCtx.state !== 'closed') audioCtx.suspend().catch(() => {});
+        stopMusic(true);
       } else {
         startMusic();
       }
