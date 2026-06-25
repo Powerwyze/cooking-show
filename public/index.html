@@ -412,6 +412,15 @@
     .rb-kitchen { display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:16px;background:#110c02;border:1px solid #2d1f06;border-radius:10px;padding:11px 16px;width:100%;max-width:860px; }
     .rb-kitchen-label { font-size:9px;letter-spacing:3px;color:#44290a;margin-right:4px;white-space:nowrap; }
     .rb-equip-chip { display:flex;align-items:center;gap:6px;background:#1f1506;border:1px solid #3d2609;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:900;color:#f59e0b;font-family:'Courier New',monospace;letter-spacing:1px; }
+    .rb-craft-panel { width:100%;max-width:860px;margin-bottom:18px;background:#110c02;border:1px solid #2d1f06;border-radius:10px;padding:12px 14px; }
+    .rb-craft-head { display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:9px; }
+    .rb-craft-title { font-size:10px;letter-spacing:3px;color:#b45309;font-weight:900; }
+    .rb-craft-inv { font-size:9px;color:#44290a;text-align:right;line-height:1.5; }
+    .rb-craft-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px; }
+    .rb-craft-btn { background:#1f1506;border:1px solid #3d2609;border-radius:8px;color:#d97706;padding:8px 7px;font-family:'Courier New',monospace;font-size:10px;font-weight:900;cursor:pointer;transition:all .12s;text-align:center; }
+    .rb-craft-btn:hover { border-color:#92400e;color:#f59e0b;background:#261906; }
+    .rb-craft-btn.selected { border-color:#38bdf8;color:#7dd3fc;background:#071a2e; }
+    .rb-craft-needs { display:block;font-size:8px;color:#6b3f0a;margin-top:3px;line-height:1.3; }
     /* equipment badge on recipe card */
     .rb-card-equip.has-it  { color:#4ade80;border-color:#14532d;background:#052e16; }
     .rb-card-equip.no-equip { color:#f87171;border-color:#450a0a;background:#1a0505; }
@@ -496,6 +505,13 @@
     <div class="rb-new-banner hidden" id="rbNewBanner">✨ NEW RECIPE UNLOCKED!</div>
     <div class="rb-kitchen" id="rbKitchen">
       <span class="rb-kitchen-label">YOUR KITCHEN:</span>
+    </div>
+    <div class="rb-craft-panel">
+      <div class="rb-craft-head">
+        <div class="rb-craft-title">CRAFT STATION</div>
+        <div class="rb-craft-inv" id="rbCraftInventory">Inventory empty</div>
+      </div>
+      <div class="rb-craft-grid" id="rbCraftingOptions"></div>
     </div>
     <div class="rb-grid" id="rbGrid"></div>
     <div class="rb-footer">
@@ -1058,6 +1074,7 @@
       if (r1 && r2) game.inventory.push({ name:craft.name, crafted:true });
       game.selectedCraft = [];
       updateUI();
+      if (document.getElementById('recipeBookOverlay').classList.contains('show')) openRecipeBook(null);
     }
 
     /* ═══ START COOKING ═══ */
@@ -1553,6 +1570,7 @@
       document.getElementById('craftingOptions').innerHTML = Object.entries(CRAFTING_RECIPES).map(([key,c]) =>
         `<button class="craft-btn ${game.selectedCraft.includes(key)?'selected':''}" onclick="toggleCraft('${key}')">${c.emoji} ${c.name}<br><span style="font-size:9px;opacity:.6">${c.needs.join('+')}</span></button>`
       ).join('');
+      updateRecipeBookCrafting();
 
       // Inventory
       document.getElementById('inventory').innerHTML = game.inventory.length === 0
@@ -1602,6 +1620,18 @@
         Object.values(RECIPES).filter(r=>r.unlocked).length + '/' + Object.keys(RECIPES).length;
     }
 
+    function updateRecipeBookCrafting() {
+      const craftGrid = document.getElementById('rbCraftingOptions');
+      const invEl = document.getElementById('rbCraftInventory');
+      if (!craftGrid || !invEl) return;
+      craftGrid.innerHTML = Object.entries(CRAFTING_RECIPES).map(([key,c]) =>
+        `<button class="rb-craft-btn ${game.selectedCraft.includes(key)?'selected':''}" onclick="toggleCraft('${key}')">${c.emoji} ${c.name}<span class="rb-craft-needs">${c.needs.join(' + ')}</span></button>`
+      ).join('');
+      invEl.textContent = game.inventory.length
+        ? game.inventory.map(inv => inv.name).slice(0, 6).join(' · ') + (game.inventory.length > 6 ? ` +${game.inventory.length - 6}` : '')
+        : 'Inventory empty';
+    }
+
     /* ═══ RECIPE BOOK ═══ */
     function openRecipeBook(newKey) {
       const unlocked = Object.entries(RECIPES).filter(([, r]) => r.unlocked);
@@ -1622,6 +1652,7 @@
         game.equipment.map(e =>
           `<span class="rb-equip-chip">${EQUIPMENT_EMOJI[e] || '🍳'} ${e}</span>`
         ).join('');
+      updateRecipeBookCrafting();
 
       document.getElementById('rbGrid').innerHTML = unlocked.map(([key, r]) => {
         const emoji = RECIPE_EMOJI[key] || '🍽️';
