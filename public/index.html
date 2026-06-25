@@ -570,6 +570,7 @@
         <button class="start-btn primary" onclick="clickStartGame()">▶ START GAME</button>
         <button class="start-btn secondary" onclick="openHowToPlay()">📖 HOW TO PLAY</button>
         <button class="start-btn secondary" onclick="openSettings()">⚙️ SETTINGS</button>
+        <button class="start-btn secondary" onclick="logoutUser()">LOGOUT</button>
       </div>
     </div>
   </div>
@@ -1943,6 +1944,19 @@
       }
       btn.textContent = originalText;
       btn.disabled = false;
+    }
+
+    function logoutUser() {
+      currentUser = null;
+      document.getElementById('startWelcome').textContent = '';
+      document.getElementById('authUsername').value = '';
+      document.getElementById('authPassword').value = '';
+      document.getElementById('authError').textContent = '';
+      authSwitchTab('login');
+      returnToMenu();
+      const screen = document.getElementById('authScreen');
+      screen.style.display = '';
+      screen.classList.remove('hiding');
     }
 
     document.getElementById('authUsername').addEventListener('keydown', e => {
