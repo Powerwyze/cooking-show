@@ -1373,12 +1373,7 @@
 
       setTimeout(() => {
         if (!game.cooking) return;
-        document.getElementById('cookingGame').classList.remove('show');
-        const recipe = game.cooking;
-        game.inventory = game.inventory.filter(inv => !recipe.ingr.includes(inv.name));
-        game.cooking = null;
-        game.currentRecipe = null;
-        updateUI();
+        returnToMenu();
       }, 700);
     }
 
